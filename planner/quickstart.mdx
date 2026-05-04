@@ -1,0 +1,141 @@
+---
+title: Quickstart
+description: Plan a Stuttgart → Berlin trip and find where the truck needs to charge.
+---
+
+## 1. Submit your route
+
+<Info>
+**Prerequisites:** An [API key](/#authentication) and a [Vehicle ID](/planner/vehicles). Contact [team@fryte.eu](mailto:team@fryte.eu) if you don't have these yet.
+</Info>
+
+Send your vehicle, starting battery level, route, and charger requirements. The `poi_info` field is required — it tells the optimizer what kind of charging stations to look for.
+
+```bash
+curl -X POST "https://api.fryte.eu/planner/v2?corridor=8000" \
+  -H "Authorization: Bearer <your-token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "vehicle_id": "010160700001",
+    "battery_level_start": 0.8,
+    "section_list": [
+      {
+        "start_pos": [48.7758, 9.1829],
+        "stop_pos": [52.5200, 13.4050],
+        "payload_kg": 19300
+      }
+    ],
+    "poi_info": {
+      "min_kW": 150,
+      "connector_type": ["CCS"]
+    }
+  }'
+```
+
+The API starts optimizing in the background and returns identifiers to track the job.
+
+```json
+{
+  "optimization_id": 7653,
+  "job_id": "989b3289-2947-4bc1-a927-882fbcaa33f9",
+  "tour_id": 7610
+}
+```
+
+## 2. Wait for the result
+
+Poll with your `job_id` until `status` is `succeeded`.
+
+```bash
+curl "https://api.fryte.eu/planner/jobs/<job_id>" \
+  -H "Authorization: Bearer <your-token>"
+```
+
+```json
+{
+  "status": "succeeded",
+  "optimization_id": 7653,
+  "job_id": "989b3289-2947-4bc1-a927-882fbcaa33f9",
+  "tour_id": 7610,
+  "vehicle_id": "010160700001"
+}
+```
+
+## 3. Get your charging plan
+
+Once `status` is `succeeded`, fetch the optimized route with your `optimization_id`.
+
+```bash
+curl "https://api.fryte.eu/planner/optimizations/7653/result" \
+  -H "Authorization: Bearer <your-token>"
+```
+
+The optimizer found **two charging stops** for the 640 km route. Your single section became three — one per leg between stops:
+
+```json
+{
+  "qualification": "Driveable",
+  "battery_level_start": 0.8,
+  "battery_level_end": 0.27,
+  "sections": [
+    {
+      "start_pos": [48.78, 9.18, 0.80],
+      "stop_pos": [50.05, 11.62, 0.81],
+      "sec_length_km": 291.1,
+      "sec_duration_min": 237.4,
+      "poi_summary": {
+        "name": "Milence",
+        "address": "Frankenring 1",
+        "power_available_kW": 400,
+        "energy_kWh": 357.0,
+        "charge_time_min": 59.5
+      }
+    },
+    {
+      "start_pos": [50.05, 11.62, 0.81],
+      "stop_pos": [50.80, 11.90, 0.66],
+      "sec_length_km": 95.4,
+      "sec_duration_min": 71.8,
+      "poi_summary": {
+        "name": "mblty charging",
+        "address": "An der Autobahn 1",
+        "power_available_kW": 300,
+        "energy_kWh": 36.0,
+        "charge_time_min": 8.0
+      }
+    },
+    {
+      "start_pos": [50.80, 11.90, 0.66],
+      "stop_pos": [52.52, 13.41, 0.27],
+      "sec_length_km": 253.6,
+      "sec_duration_min": 208.5,
+      "poi_summary": null
+    }
+  ],
+  "toll_summary": [],
+  "poi_list": ["..."]
+}
+```
+
+**How to read this:**
+- **`qualification`** — `Driveable` means the route works. `not_drivable` means the truck can't make it with these parameters.
+- **`start_pos` / `stop_pos`** — `[lat, lon, state_of_charge]`. The third value is the battery level at that point.
+- **`poi_summary`** — the charging station selected for that stop. `null` on the last section means no charging needed (destination).
+- **`poi_list`** — all candidate stations the optimizer considered.
+
+## Endpoint Reference
+
+<CardGroup cols={2}>
+  <Card title="Plan Tour V2" icon="paper-plane" href="/api-reference/planner/plan-tour-v2">
+    Submit a route for optimization.
+  </Card>
+  <Card title="Get Job Status" icon="clock" href="/api-reference/planner/get-job-status">
+    Poll for optimization progress.
+  </Card>
+  <Card title="List Jobs" icon="list" href="/api-reference/planner/list-jobs">
+    List all optimization jobs.
+  </Card>
+  <Card title="Get Optimization Result" icon="route" href="/api-reference/planner/get-optimization-result">
+    Retrieve the optimized route.
+  </Card>
+</CardGroup>

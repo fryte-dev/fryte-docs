@@ -1,0 +1,32 @@
+---
+title: Limitations
+description: Current constraints and known limitations of the Planner API.
+---
+
+## Route Constraints
+
+{/* Max number of sections per request? Max route distance? */}
+
+## Vehicle Support
+
+{/* Only pre-configured vehicles — no custom vehicle specs via API. Vehicle database is managed by FRYTE. */}
+
+## Time Windows
+
+{/* opening_time only supported on multi-section routes, not single-section. Long routes with time windows may have extended optimization times. */}
+
+## Charging Stations
+
+{/* POI data depends on available station databases. Station availability is not real-time. bookable field exists but booking integration is separate. */}
+
+## Response Format
+
+{/* start_soc in poi_summary has different semantics on overnight stops (contains arrival_time float instead of SoC). sections and poi_list are untyped in the OpenAPI spec. arrival_time uses mixed formats: float (decimal hours) on intermediate sections, ISO-8601 UTC on destination. */}
+
+## Rate Limits
+
+{/* TBD */}
+
+## Coverage
+
+{/* Geographic coverage area? Europe only? */}

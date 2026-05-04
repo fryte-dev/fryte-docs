@@ -11,113 +11,84 @@
   "navigation": {
     "tabs": [
       {
-        "tab": "Guides",
+        "tab": "Planner",
+        "openapi": "openapi.json",
         "groups": [
           {
-            "group": "Getting started",
+            "group": "Introduction",
             "pages": [
               "index",
-              "quickstart",
-              "development"
+              "planner/quickstart",
+              "planner/vehicles",
+              "planner/errors",
+              "planner/limitations"
             ]
           },
           {
-            "group": "Customization",
+            "group": "Example Routes",
             "pages": [
-              "essentials/settings",
-              "essentials/navigation"
+              "planner/examples/intermediate-stops",
+              "planner/examples/multiday-tour",
+              "planner/examples/time-windows"
             ]
           },
           {
-            "group": "Writing content",
+            "group": "Endpoints",
             "pages": [
-              "essentials/markdown",
-              "essentials/code",
-              "essentials/images",
-              "essentials/components",
-              "essentials/reusable-snippets"
+              "POST /planner/v2",
+              "GET /planner/jobs/{job_id}",
+              "GET /planner/jobs",
+              "GET /planner/optimizations/{optimization_id}/result"
             ]
           },
           {
-            "group": "Agent ready",
+            "group": "Vehicle Lookup",
             "pages": [
-              "agent-ready/prompt",
-              "agent-ready/visibility",
-              "agent-ready/contextual",
-              "ai-tools/cursor",
-              "ai-tools/claude-code",
-              "ai-tools/windsurf"
-            ]
-          }
-        ]
-      },
-      {
-        "tab": "API reference",
-        "groups": [
-          {
-            "group": "API documentation",
-            "pages": [
-              "api-reference/introduction"
+              "GET /vehicles/info/oems",
+              "GET /vehicles/info/models",
+              "GET /vehicles/info/battery_capacities",
+              "POST /vehicles/info/by_description",
+              "GET /vehicles/info/{vehicle_id}"
             ]
           },
           {
-            "group": "Endpoint examples",
+            "group": "Routing",
             "pages": [
-              "api-reference/endpoint/get",
-              "api-reference/endpoint/create",
-              "api-reference/endpoint/delete",
-              "api-reference/endpoint/webhook"
+              "POST /routing/route",
+              "GET /routing/geocode"
+            ]
+          },
+          {
+            "group": "Charging Stations",
+            "pages": [
+              "GET /poi/cpos"
             ]
           }
         ]
       }
-    ],
-    "global": {
-      "anchors": [
-        {
-          "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
-          "icon": "book-open-cover"
-        },
-        {
-          "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
-          "icon": "newspaper"
-        }
-      ]
-    }
+    ]
   },
   "logo": "/logo/light.svg",
   "navbar": {
     "links": [
       {
         "label": "Support",
-        "href": "mailto:hi@mintlify.com"
+        "href": "mailto:team@fryte.eu"
       }
     ],
     "primary": {
       "type": "button",
-      "label": "Dashboard",
-      "href": "https://dashboard.mintlify.com"
+      "label": "Get API Key",
+      "href": "mailto:team@fryte.eu"
     }
   },
   "contextual": {
-    "options": [
-     "copy",
-     "view",
-     "chatgpt",
-     "claude",
-     "perplexity",
-     "mcp",
-     "cursor",
-     "vscode"
-   ]
+    "options": ["copy"]
   },
   "footer": {
     "socials": {
-      "x": "https://x.com/mintlify",
-      "github": "https://github.com/mintlify",
-      "linkedin": "https://linkedin.com/company/mintlify"
+      "website": "https://fryte.com/en",
+      "linkedin": "https://www.linkedin.com/company/fryte-mobility/posts/"
     }
   }
 }

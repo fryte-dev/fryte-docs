@@ -1,0 +1,115 @@
+---
+title: Time Windows
+description: Munich to Augsburg to Ulm, 2 drops with opening times.
+---
+
+## Request
+
+```bash
+curl -X POST "https://api.fryte.eu/planner/v2?corridor=8000" \
+  -H "Authorization: Bearer <your-token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "vehicle_id": "010160700001",
+    "battery_level_start": 0.8,
+    "section_list": [
+      {
+        "section_id": "muenchen-augsburg",
+        "start_pos": [48.1351, 11.5820],
+        "stop_pos": [48.3705, 10.8978],
+        "payload_kg": 19300,
+        "opening_time": ["09:00:00", "12:00:00"]
+      },
+      {
+        "section_id": "augsburg-ulm",
+        "start_pos": [48.3705, 10.8978],
+        "stop_pos": [48.4011, 9.9876],
+        "payload_kg": 12000,
+        "opening_time": ["13:00:00", "17:00:00"]
+      }
+    ],
+    "poi_info": {
+      "min_kW": 150,
+      "connector_type": ["CCS"]
+    },
+    "start_time_tour": "06:00:00"
+  }'
+```
+
+## Response
+
+```json
+{
+  "qualification": "Driveable",
+  "battery_level_start": 0.8,
+  "battery_level_end": 0.674,
+  "optimal_departure_time": "2026-05-04T08:40:00Z",
+  "time_windows_reachable": "True",
+  "sections": [
+    {
+      "start_pos": [48.135, 11.582, 0.80],
+      "stop_pos": [48.28, 11.271, 0.779],
+      "polyline": "BlX8s5lJkk...",
+      "poi_summary": {
+        "id": 0,
+        "name": "Energie Südbayern (ESB)",
+        "address": "Ohmstraße 2",
+        "coordinate_lat": 48.28,
+        "coordinate_lon": 11.269,
+        "power_available_kW": 300.0,
+        "energy_kWh": 18.0,
+        "charge_time_min": 4.0,
+        "service_time_min": 7.0,
+        "arrival_time": 9.555,
+        "sec_length_km": 31.223,
+        "sec_duration_min": 53.318,
+        "sec_energy_consumption_kWhkm": 0.983,
+        "start_soc": 0.749,
+        "stop_soc": 0.779,
+        "additional_stops": true,
+        "alternatives": [
+          { "name": "Tesla Supercharger", "address": "An der Brandleiten 6", "coordinate_lat": 48.394, "coordinate_lon": 11.071 },
+          { "name": "Shell Recharge", "address": "Laimeringer Straße 10", "coordinate_lat": 48.39, "coordinate_lon": 11.066 },
+          { "name": "Aral pulse", "address": "Laimeringer Straße 2", "coordinate_lat": 48.39, "coordinate_lon": 11.064 },
+          { "name": "Electra", "address": "Laimeringer Straße 1", "coordinate_lat": 48.391, "coordinate_lon": 11.064 }
+        ],
+        "amenities": [],
+        "bookable": false,
+        "location_id": "a667eb3e-77f7-11ed-8312-42010aa40fc0"
+      }
+    },
+    "... 5 more sections ...",
+    {
+      "start_pos": [48.457, 10.029, 0.669],
+      "stop_pos": [48.401, 9.988, 0.674],
+      "polyline": "BlXgr4nJs5...",
+      "poi_summary": {
+        "id": 0,
+        "name": "Destination",
+        "address": "See Destination",
+        "coordinate_lat": 48.401,
+        "coordinate_lon": 9.988,
+        "power_available_kW": 0,
+        "energy_kWh": 0,
+        "charge_time_min": 0,
+        "service_time_min": 0,
+        "arrival_time": "2026-05-04T13:00:53Z",
+        "sec_length_km": 8.735,
+        "sec_duration_min": 12.91,
+        "sec_energy_consumption_kWhkm": -0.306,
+        "start_soc": 0.674,
+        "stop_soc": 0.674,
+        "additional_stops": false,
+        "alternatives": null,
+        "amenities": [],
+        "bookable": false,
+        "location_id": null
+      }
+    }
+  ]
+}
+```
+
+<Note>
+The optimizer calculated a departure at 08:40 to hit both time windows — Augsburg within 09:00–12:00 and Ulm within 13:00–17:00.
+</Note>

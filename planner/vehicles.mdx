@@ -1,0 +1,196 @@
+---
+title: Vehicle Lookup
+description: Find your Vehicle ID
+---
+
+export const API_BASE = 'https://staging.api.fryte.xyz'
+
+export const VehicleFinder = () => {
+  const [token, setToken] = React.useState('')
+  const [authed, setAuthed] = React.useState(false)
+  const [oems, setOems] = React.useState({})
+  const [models, setModels] = React.useState({})
+  const [selectedOem, setSelectedOem] = React.useState('')
+  const [selectedModel, setSelectedModel] = React.useState('')
+  const [batteryCapacity, setBatteryCapacity] = React.useState('')
+  const [chargingPower, setChargingPower] = React.useState('')
+  const [vehicleId, setVehicleId] = React.useState('')
+  const [vehicleDetails, setVehicleDetails] = React.useState(null)
+  const [loading, setLoading] = React.useState(false)
+  const [error, setError] = React.useState('')
+  const [copied, setCopied] = React.useState(false)
+  const [step, setStep] = React.useState(1)
+
+  const authHeaders = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
+
+  const connect = () => {
+    setError('')
+    fetch(`${API_BASE}/vehicles/info/oems`, { headers: authHeaders })
+      .then(r => { if (!r.ok) throw new Error(); return r.json() })
+      .then(data => {
+        const mapped = {}
+        Object.entries(data).forEach(([code, name]) => { mapped[name] = code })
+        setOems(mapped)
+        setAuthed(true)
+        setStep(2)
+      })
+      .catch(() => setError('Invalid API key'))
+  }
+
+  const selectOem = (name) => {
+    setSelectedOem(name)
+    setSelectedModel(''); setBatteryCapacity(''); setChargingPower('')
+    setVehicleId(''); setVehicleDetails(null); setModels({})
+    if (!name) return
+    fetch(`${API_BASE}/vehicles/info/models?manufacturer=${encodeURIComponent(name)}`, { headers: authHeaders })
+      .then(r => r.json())
+      .then(data => {
+        const mfr = data[oems[name]] || data[name] || {}
+        if (mfr.models) { setModels(mfr.models) }
+        else {
+          const mapped = {}
+          Object.entries(mfr).forEach(([k, v]) => { mapped[k] = v })
+          setModels(mapped)
+        }
+      })
+      .catch(() => setError('Failed to load models'))
+  }
+
+  const lookup = async () => {
+    if (!selectedOem || !selectedModel || !batteryCapacity || !chargingPower) return
+    setLoading(true); setError(''); setVehicleId(''); setVehicleDetails(null)
+    try {
+      const res = await fetch(`${API_BASE}/vehicles/info/by_description`, {
+        method: 'POST', headers: authHeaders,
+        body: JSON.stringify({
+          manufacturer: selectedOem, model: selectedModel,
+          battery_capacity_kwh: Number(batteryCapacity),
+          charging_power_kw: Number(chargingPower),
+        }),
+      })
+      if (!res.ok) {
+        const body = await res.json().catch(() => null)
+        throw new Error(body?.detail || `Vehicle not found`)
+      }
+      const id = await res.json()
+      const vid = typeof id === 'string' ? id : String(id)
+      setVehicleId(vid)
+      setVehicleDetails({ manufacturer: selectedOem, model: selectedModel, battery: batteryCapacity, charging: chargingPower })
+      setStep(3)
+    } catch (e) {
+      setError(e.message || 'Lookup failed')
+    } finally { setLoading(false) }
+  }
+
+  const copy = () => {
+    navigator.clipboard.writeText(vehicleId)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  const reset = () => {
+    setSelectedOem(''); setSelectedModel(''); setBatteryCapacity(''); setChargingPower('')
+    setVehicleId(''); setVehicleDetails(null); setError(''); setStep(2)
+  }
+
+  const isReady = selectedOem && selectedModel && batteryCapacity && chargingPower
+
+  const s = {
+    wrap: { display: 'flex', flexDirection: 'column', gap: '20px', padding: '24px', borderRadius: '12px', border: '1px solid #e2e8f0', margin: '24px 0' },
+    label: { display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '6px', color: '#374151', textTransform: 'uppercase', letterSpacing: '0.5px' },
+    input: (on = true) => ({ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '14px', backgroundColor: on ? '#fff' : '#f3f4f6', cursor: on ? 'pointer' : 'not-allowed', outline: 'none', boxSizing: 'border-box' }),
+    btn: (on = true) => ({ padding: '12px', borderRadius: '8px', border: 'none', backgroundColor: on ? '#F57C00' : '#d1d5db', color: '#fff', fontSize: '14px', fontWeight: 600, cursor: on ? 'pointer' : 'default', width: '100%' }),
+    btnOutline: { padding: '8px 16px', borderRadius: '6px', border: '1px solid #d1d5db', backgroundColor: 'transparent', fontSize: '13px', cursor: 'pointer', color: '#374151' },
+    err: { padding: '10px 14px', borderRadius: '8px', backgroundColor: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', fontSize: '13px' },
+    row: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' },
+  }
+
+  if (!authed) return (
+    <div style={s.wrap}>
+      <label style={s.label}>API Key</label>
+      <div style={{ display: 'flex', gap: '10px' }}>
+        <input type="password" value={token} onChange={e => setToken(e.target.value)}
+          placeholder="Your API key" onKeyDown={e => e.key === 'Enter' && token && connect()}
+          style={{ ...s.input(), flex: 1 }} />
+        <button onClick={connect} disabled={!token} style={{ ...s.btn(!!token), width: 'auto', padding: '10px 24px', whiteSpace: 'nowrap' }}>Authenticate</button>
+      </div>
+      {error && <div style={s.err}>{error}</div>}
+    </div>
+  )
+
+  if (vehicleId) return (
+    <div style={s.wrap}>
+      <div style={{ textAlign: 'center', padding: '8px 0' }}>
+        <div style={{ fontSize: '13px', color: '#6b7280', marginBottom: '8px' }}>Your Vehicle ID</div>
+        <code style={{ fontSize: '28px', fontWeight: 700, letterSpacing: '2px', color: '#111827' }}>{vehicleId}</code>
+      </div>
+      {vehicleDetails && (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '13px', color: '#6b7280', padding: '12px 16px', backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+          <div><span style={{ fontWeight: 500 }}>Manufacturer:</span> {vehicleDetails.manufacturer}</div>
+          <div><span style={{ fontWeight: 500 }}>Model:</span> {vehicleDetails.model}</div>
+          <div><span style={{ fontWeight: 500 }}>Battery:</span> {vehicleDetails.battery} kWh</div>
+          <div><span style={{ fontWeight: 500 }}>CCS Power:</span> {vehicleDetails.charging} kW</div>
+        </div>
+      )}
+      <div style={{ display: 'flex', gap: '12px' }}>
+        <button onClick={copy} style={{ ...s.btn(), flex: 1, backgroundColor: copied ? '#16a34a' : '#F57C00' }}>
+          {copied ? 'Copied!' : 'Copy Vehicle ID'}
+        </button>
+        <button onClick={reset} style={s.btnOutline}>New lookup</button>
+      </div>
+    </div>
+  )
+
+  return (
+    <div style={s.wrap}>
+      <div>
+        <label style={s.label}>Manufacturer</label>
+        <select value={selectedOem} onChange={e => selectOem(e.target.value)} style={s.input()}>
+          <option value="">Select...</option>
+          {Object.keys(oems).sort().map(n => <option key={n} value={n}>{n}</option>)}
+        </select>
+      </div>
+      <div>
+        <label style={s.label}>Model</label>
+        <select value={selectedModel} onChange={e => { setSelectedModel(e.target.value); setVehicleId('') }} disabled={!selectedOem} style={s.input(!!selectedOem)}>
+          <option value="">Select...</option>
+          {Object.values(models).sort().map(n => <option key={n} value={n}>{n}</option>)}
+        </select>
+      </div>
+      <div style={s.row}>
+        <div>
+          <label style={s.label}>Battery Capacity (kWh)</label>
+          <input type="number" value={batteryCapacity} onChange={e => setBatteryCapacity(e.target.value)}
+            placeholder="e.g. 600" disabled={!selectedModel} style={s.input(!!selectedModel)} />
+        </div>
+        <div>
+          <label style={s.label}>CCS Charging Power (kW)</label>
+          <input type="number" value={chargingPower} onChange={e => setChargingPower(e.target.value)}
+            placeholder="e.g. 700" disabled={!selectedModel} style={s.input(!!selectedModel)} />
+        </div>
+      </div>
+      <button onClick={lookup} disabled={!isReady || loading} style={s.btn(isReady && !loading)}>
+        {loading ? 'Looking up...' : 'Get Vehicle ID'}
+      </button>
+      {error && <div style={s.err}>{error}</div>}
+    </div>
+  )
+}
+
+The planner needs a `vehicle_id` to know your truck's battery, charging specs, and connector setup. Authenticate with your [API key](/#authentication) and look it up below.
+
+<VehicleFinder />
+
+## How it works
+
+The Vehicle ID is a 12-digit code that encodes your truck's specs. The lookup tool queries the vehicle database for you — just select your manufacturer, model, and enter battery and charging specs.
+
+| Digits | Meaning | Example |
+|--------|---------|---------|
+| 1–2 | Manufacturer | `01` = Daimler |
+| 3–4 | Model | `01` = eActros |
+| 5–6 | Battery capacity | `60` = 600 kWh |
+| 7–8 | CCS charging power | `70` = 700 kW |
+| 9–10 | MCS charging power | `00` = not supported |
+| 11 | MCS flag | `0` = no MCS |
+| 12 | CCS position | `1` = right, `2` = left, `3` = both |

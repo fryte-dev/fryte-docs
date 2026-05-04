@@ -1,0 +1,39 @@
+---
+title: Errors
+description: HTTP status codes and error response format
+---
+
+## Error response format
+
+```json
+{
+  "detail": "Human-readable error message"
+}
+```
+
+Validation errors (422) return additional detail about the affected fields:
+
+```json
+{
+  "detail": [
+    {
+      "loc": ["body", "battery_level_start"],
+      "msg": "Input should be greater than or equal to 0.1",
+      "type": "greater_than_equal"
+    }
+  ]
+}
+```
+
+## Status codes
+
+| Code | Meaning | Common causes |
+|------|---------|---------------|
+| `200` | Success | Request processed successfully |
+| `202` | Accepted | Optimization job submitted (POST /planner/v2) |
+| `400` | Bad Request | Invalid input, e.g. malformed time format |
+| `401` | Unauthorized | Missing or invalid Bearer token |
+| `404` | Not Found | Vehicle or resource not found |
+| `422` | Validation Error | Request body fails schema validation (e.g. battery_level_start out of range) |
+| `500` | Internal Error | Server-side issue — contact support |
+| `502` | Bad Gateway | Optimization service temporarily unavailable — retry after a few seconds |

@@ -1,0 +1,98 @@
+---
+title: Charging Stops
+description: Berlin to Frankfurt, 546 km, 2 charging stops.
+---
+
+## Request
+
+```bash
+curl -X POST "https://api.fryte.eu/planner/v2?corridor=8000" \
+  -H "Authorization: Bearer <your-token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "vehicle_id": "010160700001",
+    "battery_level_start": 0.8,
+    "section_list": [
+      {
+        "start_pos": [52.5200, 13.4050],
+        "stop_pos": [50.1109, 8.6821],
+        "payload_kg": 19300
+      }
+    ],
+    "poi_info": {
+      "min_kW": 150,
+      "connector_type": ["CCS"]
+    }
+  }'
+```
+
+## Response
+
+```json
+{
+  "qualification": "Driveable",
+  "battery_level_start": 0.8,
+  "battery_level_end": 0.213,
+  "sections": [
+    {
+      "start_pos": [52.52, 13.405, 0.80],
+      "stop_pos": [50.886, 11.846, 0.599],
+      "polyline": "BlXm6xgK...",
+      "poi_summary": {
+        "id": 0,
+        "name": "Pfalzwerke",
+        "address": "Rodaer Straße 72",
+        "coordinate_lat": 50.886,
+        "coordinate_lon": 11.85,
+        "power_available_kW": 200.0,
+        "energy_kWh": 180.0,
+        "charge_time_min": 60.0,
+        "service_time_min": 63.0,
+        "arrival_time": 11.416,
+        "sec_length_km": 240.407,
+        "sec_duration_min": 204.942,
+        "sec_energy_consumption_kWhkm": 1.247,
+        "start_soc": 0.30,
+        "stop_soc": 0.60,
+        "additional_stops": true,
+        "alternatives": [],
+        "amenities": [],
+        "bookable": false,
+        "location_id": "81fe2c7c-8f00-11f0-b171-42010aa400b8"
+      }
+    },
+    "... 2 more charging stop sections ...",
+    {
+      "start_pos": [50.644, 8.99, 0.32],
+      "stop_pos": [50.111, 8.682, 0.213],
+      "polyline": "BlX4rj1J...",
+      "poi_summary": {
+        "id": 0,
+        "name": "Destination",
+        "address": "See Destination",
+        "coordinate_lat": 50.111,
+        "coordinate_lon": 8.682,
+        "power_available_kW": 0,
+        "energy_kWh": 0,
+        "charge_time_min": 0,
+        "service_time_min": 0,
+        "arrival_time": "2026-05-04T17:23:01Z",
+        "sec_length_km": 77.448,
+        "sec_duration_min": 63.509,
+        "sec_energy_consumption_kWhkm": 0.831,
+        "start_soc": 0.213,
+        "stop_soc": 0.213,
+        "additional_stops": false,
+        "alternatives": null,
+        "amenities": [],
+        "bookable": false,
+        "location_id": null
+      }
+    }
+  ]
+}
+```
+
+<Note>
+The optimizer inserted 2 charging stops, splitting the single section into 4. The truck arrives in Frankfurt with 21% battery.
+</Note>

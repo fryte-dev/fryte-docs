@@ -1,0 +1,132 @@
+---
+title: Multi-Day Tour
+description: Hamburg to Munich, 777 km, overnight stop near Ingolstadt.
+---
+
+## Request
+
+```bash
+curl -X POST "https://api.fryte.eu/planner/v2?corridor=8000" \
+  -H "Authorization: Bearer <your-token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "vehicle_id": "010160700001",
+    "battery_level_start": 0.8,
+    "section_list": [
+      {
+        "start_pos": [53.5511, 9.9937],
+        "stop_pos": [48.1351, 11.5820],
+        "payload_kg": 19300
+      }
+    ],
+    "poi_info": {
+      "min_kW": 150,
+      "connector_type": ["CCS"]
+    }
+  }'
+```
+
+## Response
+
+```json
+{
+  "qualification": "Driveable",
+  "battery_level_start": 0.8,
+  "battery_level_end": 0.725,
+  "sections": [
+    {
+      "start_pos": [53.551, 9.994, 0.80],
+      "stop_pos": [51.204, 9.467, 0.266],
+      "polyline": "BlXum7mKy8...",
+      "poi_summary": {
+        "id": 0,
+        "name": "Grid & Co.",
+        "address": "Zur Mühle 8",
+        "coordinate_lat": 51.212,
+        "coordinate_lon": 9.45,
+        "power_available_kW": 400.0,
+        "energy_kWh": 66.0,
+        "charge_time_min": 11.0,
+        "service_time_min": 15.0,
+        "arrival_time": 12.271,
+        "sec_length_km": 317.091,
+        "sec_duration_min": 256.258,
+        "sec_energy_consumption_kWhkm": 1.204,
+        "start_soc": 0.161,
+        "stop_soc": 0.271,
+        "additional_stops": true,
+        "alternatives": [
+          { "name": "", "address": "Sunderbachstraße 14", "coordinate_lat": 51.128, "coordinate_lon": 9.439 },
+          { "name": "tcsd_dn_deutschlandnetz", "address": "Nürnberger Straße", "coordinate_lat": 51.123, "coordinate_lon": 9.541 }
+        ],
+        "amenities": [],
+        "bookable": false,
+        "location_id": "fa5c25a6-800b-11f0-9d89-42010aa40043"
+      }
+    },
+    "... 3 charging stop sections ...",
+    {
+      "start_pos": [49.912, 9.998, 0.621],
+      "stop_pos": [48.812, 11.466, 0.90],
+      "polyline": "BlX6t0wJ21...",
+      "poi_summary": {
+        "id": 0,
+        "name": "EnBW",
+        "address": "Ziegelberg 2",
+        "coordinate_lat": 48.816,
+        "coordinate_lon": 11.415,
+        "power_available_kW": 300.0,
+        "energy_kWh": 406.861,
+        "charge_time_min": 708.987,
+        "service_time_min": 708.987,
+        "arrival_time": 19.184,
+        "sec_length_km": 199.797,
+        "sec_duration_min": 149.719,
+        "sec_energy_consumption_kWhkm": 1.198,
+        "start_soc": 19.184,
+        "stop_soc": 0.90,
+        "additional_stops": true,
+        "alternatives": [
+          { "name": "AUDI Aktiengesellschaft", "address": "Auto-Union-Straße 57A", "coordinate_lat": 48.783, "coordinate_lon": 11.414 },
+          { "name": "Stadtwerke Ingolstadt Beteiligungen", "address": "Am Auwaldsee 6", "coordinate_lat": 48.752, "coordinate_lon": 11.461 },
+          "... 21 more alternatives ..."
+        ],
+        "amenities": [],
+        "bookable": false,
+        "location_id": "f5e41354-a0ff-11ee-b5b9-42010aa40fc0"
+      }
+    },
+    {
+      "start_pos": [48.812, 11.466, 0.90],
+      "stop_pos": [48.135, 11.582, 0.725],
+      "polyline": "BlX6w9pJqu...",
+      "poi_summary": {
+        "id": 0,
+        "name": "Destination",
+        "address": "See Destination",
+        "coordinate_lat": 48.135,
+        "coordinate_lon": 11.582,
+        "power_available_kW": 0,
+        "energy_kWh": 0,
+        "charge_time_min": 0,
+        "service_time_min": 0,
+        "arrival_time": "2026-05-05T08:10:49Z",
+        "sec_length_km": 85.318,
+        "sec_duration_min": 70.828,
+        "sec_energy_consumption_kWhkm": 1.23,
+        "start_soc": 0.725,
+        "stop_soc": 0.725,
+        "additional_stops": false,
+        "alternatives": null,
+        "amenities": [],
+        "bookable": false,
+        "location_id": null
+      }
+    }
+  ]
+}
+```
+
+<Note>
+Section 5 is an overnight stop. A dedicated field for overnight stops is planned — currently indicated by an elevated `charge_time_min`.
+</Note>
