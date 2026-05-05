@@ -20,6 +20,7 @@ export const VehicleFinder = () => {
   const [loading, setLoading] = React.useState(false)
   const [error, setError] = React.useState('')
   const [copied, setCopied] = React.useState(false)
+  const [hoveredId, setHoveredId] = React.useState(null)
 
   const authHeaders = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
 
@@ -114,10 +115,10 @@ export const VehicleFinder = () => {
     btn: (on = true) => ({ padding: '12px', borderRadius: '8px', border: 'none', backgroundColor: on ? '#F57C00' : '#d1d5db', color: '#fff', fontSize: '14px', fontWeight: 600, cursor: on ? 'pointer' : 'default', width: '100%' }),
     btnOutline: { padding: '8px 16px', borderRadius: '6px', border: '1px solid #d1d5db', backgroundColor: 'transparent', fontSize: '13px', cursor: 'pointer', color: '#374151' },
     err: { padding: '10px 14px', borderRadius: '8px', backgroundColor: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', fontSize: '13px' },
-    vehicleRow: (selected) => ({
+    vehicleRow: (selected, hovered) => ({
       padding: '12px 16px', borderRadius: '8px', cursor: 'pointer',
-      border: selected ? '2px solid #F57C00' : '1px solid #e5e7eb',
-      backgroundColor: selected ? '#fff7ed' : '#fff',
+      border: selected ? '2px solid #F57C00' : hovered ? '1px solid #F57C00' : '1px solid #e5e7eb',
+      backgroundColor: selected ? '#fff7ed' : hovered ? '#fff7ed' : '#fff',
       display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '4px',
       fontSize: '13px', color: '#374151', transition: 'all 0.15s',
     }),
@@ -192,7 +193,9 @@ export const VehicleFinder = () => {
             <div>CCS Power</div><div>MCS Power</div><div>CCS Position</div>
           </div>
           {vehicles.map(v => (
-            <div key={v.vehicle_id} onClick={() => selectVehicle(v)} style={s.vehicleRow(vehicleId === v.vehicle_id)}>
+            <div key={v.vehicle_id} onClick={() => selectVehicle(v)}
+              onMouseEnter={() => setHoveredId(v.vehicle_id)} onMouseLeave={() => setHoveredId(null)}
+              style={s.vehicleRow(vehicleId === v.vehicle_id, hoveredId === v.vehicle_id)}>
               <div style={{ fontWeight: 500 }}>{v.ccs_charging_power} kW</div>
               <div>{v.mcs_charging_power > 0 ? `${v.mcs_charging_power} kW` : '—'}</div>
               <div>{v.position_ccs}</div>
