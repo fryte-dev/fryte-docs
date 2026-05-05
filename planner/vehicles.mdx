@@ -63,8 +63,9 @@ export const VehicleFinder = () => {
       const res = await fetch(`${API_BASE}/vehicles/info/by_description`, {
         method: 'POST', headers: authHeaders,
         body: JSON.stringify({
-          manufacturer: selectedOem, model: selectedModel,
-          battery_capacity_kwh: Number(batteryCapacity),
+          oem: oems[selectedOem],
+          model: Object.entries(models).find(([k, v]) => v === selectedModel)?.[0] || selectedModel,
+          battery_capacity: Number(batteryCapacity),
           charging_power_kw: Number(chargingPower),
         }),
       })
