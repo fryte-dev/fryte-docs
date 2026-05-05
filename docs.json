@@ -41,29 +41,6 @@
               "GET /planner/optimizations/{optimization_id}/result"
             ]
           },
-          {
-            "group": "Vehicles",
-            "pages": [
-              "GET /vehicles/info/oems",
-              "GET /vehicles/info/models",
-              "GET /vehicles/info/battery_capacities",
-              "POST /vehicles/info/by_description",
-              "GET /vehicles/info/{vehicle_id}"
-            ]
-          },
-          {
-            "group": "Routing",
-            "pages": [
-              "POST /routing/route",
-              "GET /routing/geocode"
-            ]
-          },
-          {
-            "group": "Charging Stations",
-            "pages": [
-              "GET /poi/cpos"
-            ]
-          }
         ]
       }
     ]
