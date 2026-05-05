@@ -10,16 +10,16 @@ export const VehicleFinder = () => {
   const [authed, setAuthed] = React.useState(false)
   const [oems, setOems] = React.useState({})
   const [models, setModels] = React.useState({})
+  const [capacities, setCapacities] = React.useState([])
+  const [vehicles, setVehicles] = React.useState([])
   const [selectedOem, setSelectedOem] = React.useState('')
   const [selectedModel, setSelectedModel] = React.useState('')
-  const [batteryCapacity, setBatteryCapacity] = React.useState('')
-  const [chargingPower, setChargingPower] = React.useState('')
+  const [selectedCapacity, setSelectedCapacity] = React.useState('')
   const [vehicleId, setVehicleId] = React.useState('')
   const [vehicleDetails, setVehicleDetails] = React.useState(null)
   const [loading, setLoading] = React.useState(false)
   const [error, setError] = React.useState('')
   const [copied, setCopied] = React.useState(false)
-  const [step, setStep] = React.useState(1)
 
   const authHeaders = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
 
@@ -32,57 +32,67 @@ export const VehicleFinder = () => {
         Object.entries(data).forEach(([code, name]) => { mapped[name] = code })
         setOems(mapped)
         setAuthed(true)
-        setStep(2)
       })
       .catch(() => setError('Invalid API key'))
   }
 
   const selectOem = (name) => {
     setSelectedOem(name)
-    setSelectedModel(''); setBatteryCapacity(''); setChargingPower('')
+    setSelectedModel(''); setSelectedCapacity(''); setCapacities([]); setVehicles([])
     setVehicleId(''); setVehicleDetails(null); setModels({})
     if (!name) return
     fetch(`${API_BASE}/vehicles/info/models?manufacturer=${encodeURIComponent(name)}`, { headers: authHeaders })
       .then(r => r.json())
       .then(data => {
         const mfr = data[oems[name]] || data[name] || {}
-        if (mfr.models) { setModels(mfr.models) }
-        else {
-          const mapped = {}
-          Object.entries(mfr).forEach(([k, v]) => { mapped[k] = v })
-          setModels(mapped)
-        }
+        setModels(mfr.models || mfr)
       })
       .catch(() => setError('Failed to load models'))
   }
 
-  const lookup = async () => {
-    if (!selectedOem || !selectedModel || !batteryCapacity || !chargingPower) return
-    setLoading(true); setError(''); setVehicleId(''); setVehicleDetails(null)
-    try {
-      const res = await fetch(`${API_BASE}/vehicles/info/by_description`, {
-        method: 'POST', headers: authHeaders,
-        body: JSON.stringify({
-          oem: oems[selectedOem],
-          model: Object.entries(models).find(([k, v]) => v === selectedModel)?.[0] || selectedModel,
-          battery_capacity: Number(batteryCapacity),
-          charging_power_kw: Number(chargingPower),
-        }),
+  const selectModel = (modelName) => {
+    setSelectedModel(modelName)
+    setSelectedCapacity(''); setCapacities([]); setVehicles([])
+    setVehicleId(''); setVehicleDetails(null)
+    if (!modelName) return
+    const oemCode = oems[selectedOem]
+    const modelCode = Object.entries(models).find(([k, v]) => v === modelName)?.[0]
+    if (!oemCode || !modelCode) return
+    fetch(`${API_BASE}/vehicles/info/battery_capacities?search=${oemCode}${modelCode}`, { headers: authHeaders })
+      .then(r => r.json())
+      .then(data => {
+        const mfr = data[oemCode] || {}
+        const mdl = (mfr.models || {})[modelCode] || {}
+        const caps = mdl.capacities || []
+        setCapacities(caps.sort((a, b) => a - b))
       })
-      if (!res.ok) {
-        const body = await res.json().catch(() => null)
-        const detail = body?.detail
-        const msg = typeof detail === 'string' ? detail : Array.isArray(detail) ? detail.map(d => d.msg || JSON.stringify(d)).join(', ') : 'Vehicle not found'
-        throw new Error(msg)
-      }
-      const id = await res.json()
-      const vid = typeof id === 'string' ? id : String(id)
-      setVehicleId(vid)
-      setVehicleDetails({ manufacturer: selectedOem, model: selectedModel, battery: batteryCapacity, charging: chargingPower })
-      setStep(3)
-    } catch (e) {
-      setError(e.message || 'Lookup failed')
-    } finally { setLoading(false) }
+      .catch(() => setError('Failed to load battery capacities'))
+  }
+
+  const selectCapacity = (cap) => {
+    setSelectedCapacity(cap)
+    setVehicles([]); setVehicleId(''); setVehicleDetails(null); setError('')
+    if (!cap) return
+    const oemCode = oems[selectedOem]
+    const modelCode = Object.entries(models).find(([k, v]) => v === selectedModel)?.[0]
+    const batteryCode = String(Math.floor(Number(cap) / 10)).padStart(2, '0')
+    const prefix = `${oemCode}${modelCode}${batteryCode}`
+    setLoading(true)
+    fetch(`${API_BASE}/vehicles/info/vehicle_id?vehicle_id=${prefix}`, { headers: authHeaders })
+      .then(r => r.json())
+      .then(data => {
+        const list = Array.isArray(data) ? data : []
+        setVehicles(list)
+        if (list.length === 1) { setVehicleId(list[0].vehicle_id); setVehicleDetails(list[0]) }
+        if (list.length === 0) setError('No vehicles found')
+      })
+      .catch(() => setError('Failed to load vehicles'))
+      .finally(() => setLoading(false))
+  }
+
+  const selectVehicle = (v) => {
+    setVehicleId(v.vehicle_id)
+    setVehicleDetails(v)
   }
 
   const copy = () => {
@@ -92,11 +102,10 @@ export const VehicleFinder = () => {
   }
 
   const reset = () => {
-    setSelectedOem(''); setSelectedModel(''); setBatteryCapacity(''); setChargingPower('')
-    setVehicleId(''); setVehicleDetails(null); setError(''); setStep(2)
+    setSelectedOem(''); setSelectedModel(''); setSelectedCapacity('')
+    setCapacities([]); setVehicles([])
+    setVehicleId(''); setVehicleDetails(null); setError('')
   }
-
-  const isReady = selectedOem && selectedModel && batteryCapacity && chargingPower
 
   const s = {
     wrap: { display: 'flex', flexDirection: 'column', gap: '20px', padding: '24px', borderRadius: '12px', border: '1px solid #e2e8f0', margin: '24px 0' },
@@ -105,7 +114,13 @@ export const VehicleFinder = () => {
     btn: (on = true) => ({ padding: '12px', borderRadius: '8px', border: 'none', backgroundColor: on ? '#F57C00' : '#d1d5db', color: '#fff', fontSize: '14px', fontWeight: 600, cursor: on ? 'pointer' : 'default', width: '100%' }),
     btnOutline: { padding: '8px 16px', borderRadius: '6px', border: '1px solid #d1d5db', backgroundColor: 'transparent', fontSize: '13px', cursor: 'pointer', color: '#374151' },
     err: { padding: '10px 14px', borderRadius: '8px', backgroundColor: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', fontSize: '13px' },
-    row: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' },
+    vehicleRow: (selected) => ({
+      padding: '12px 16px', borderRadius: '8px', cursor: 'pointer',
+      border: selected ? '2px solid #F57C00' : '1px solid #e5e7eb',
+      backgroundColor: selected ? '#fff7ed' : '#fff',
+      display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '4px',
+      fontSize: '13px', color: '#374151', transition: 'all 0.15s',
+    }),
   }
 
   if (!authed) return (
@@ -121,20 +136,20 @@ export const VehicleFinder = () => {
     </div>
   )
 
-  if (vehicleId) return (
+  if (vehicleId && vehicleDetails) return (
     <div style={s.wrap}>
       <div style={{ textAlign: 'center', padding: '8px 0' }}>
         <div style={{ fontSize: '13px', color: '#6b7280', marginBottom: '8px' }}>Your Vehicle ID</div>
         <code style={{ fontSize: '28px', fontWeight: 700, letterSpacing: '2px', color: '#111827' }}>{vehicleId}</code>
       </div>
-      {vehicleDetails && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '13px', color: '#6b7280', padding: '12px 16px', backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
-          <div><span style={{ fontWeight: 500 }}>Manufacturer:</span> {vehicleDetails.manufacturer}</div>
-          <div><span style={{ fontWeight: 500 }}>Model:</span> {vehicleDetails.model}</div>
-          <div><span style={{ fontWeight: 500 }}>Battery:</span> {vehicleDetails.battery} kWh</div>
-          <div><span style={{ fontWeight: 500 }}>CCS Power:</span> {vehicleDetails.charging} kW</div>
-        </div>
-      )}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', fontSize: '13px', color: '#6b7280', padding: '12px 16px', backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+        <div><span style={{ fontWeight: 500 }}>Manufacturer:</span> {vehicleDetails.manufacturer}</div>
+        <div><span style={{ fontWeight: 500 }}>Model:</span> {vehicleDetails.model}</div>
+        <div><span style={{ fontWeight: 500 }}>Battery:</span> {vehicleDetails.battery_capacity} kWh</div>
+        <div><span style={{ fontWeight: 500 }}>CCS Power:</span> {vehicleDetails.ccs_charging_power} kW</div>
+        <div><span style={{ fontWeight: 500 }}>MCS Power:</span> {vehicleDetails.mcs_charging_power > 0 ? `${vehicleDetails.mcs_charging_power} kW` : '—'}</div>
+        <div><span style={{ fontWeight: 500 }}>CCS Position:</span> {vehicleDetails.position_ccs}</div>
+      </div>
       <div style={{ display: 'flex', gap: '12px' }}>
         <button onClick={copy} style={{ ...s.btn(), flex: 1, backgroundColor: copied ? '#16a34a' : '#F57C00' }}>
           {copied ? 'Copied!' : 'Copy Vehicle ID'}
@@ -146,35 +161,45 @@ export const VehicleFinder = () => {
 
   return (
     <div style={s.wrap}>
-      <div>
-        <label style={s.label}>Manufacturer</label>
-        <select value={selectedOem} onChange={e => selectOem(e.target.value)} style={s.input()}>
-          <option value="">Select...</option>
-          {Object.keys(oems).sort().map(n => <option key={n} value={n}>{n}</option>)}
-        </select>
-      </div>
-      <div>
-        <label style={s.label}>Model</label>
-        <select value={selectedModel} onChange={e => { setSelectedModel(e.target.value); setVehicleId('') }} disabled={!selectedOem} style={s.input(!!selectedOem)}>
-          <option value="">Select...</option>
-          {Object.values(models).sort().map(n => <option key={n} value={n}>{n}</option>)}
-        </select>
-      </div>
-      <div style={s.row}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
         <div>
-          <label style={s.label}>Battery Capacity (kWh)</label>
-          <input type="number" value={batteryCapacity} onChange={e => setBatteryCapacity(e.target.value)}
-            placeholder="e.g. 600" disabled={!selectedModel} style={s.input(!!selectedModel)} />
+          <label style={s.label}>Manufacturer</label>
+          <select value={selectedOem} onChange={e => selectOem(e.target.value)} style={s.input()}>
+            <option value="">Select...</option>
+            {Object.keys(oems).sort().map(n => <option key={n} value={n}>{n}</option>)}
+          </select>
         </div>
         <div>
-          <label style={s.label}>CCS Charging Power (kW)</label>
-          <input type="number" value={chargingPower} onChange={e => setChargingPower(e.target.value)}
-            placeholder="e.g. 700" disabled={!selectedModel} style={s.input(!!selectedModel)} />
+          <label style={s.label}>Model</label>
+          <select value={selectedModel} onChange={e => selectModel(e.target.value)} disabled={!selectedOem} style={s.input(!!selectedOem)}>
+            <option value="">Select...</option>
+            {Object.values(models).sort().map(n => <option key={n} value={n}>{n}</option>)}
+          </select>
+        </div>
+        <div>
+          <label style={s.label}>Battery (kWh)</label>
+          <select value={selectedCapacity} onChange={e => selectCapacity(e.target.value)} disabled={!selectedModel} style={s.input(!!selectedModel)}>
+            <option value="">Select...</option>
+            {capacities.map(c => <option key={c} value={c}>{c} kWh</option>)}
+          </select>
         </div>
       </div>
-      <button onClick={lookup} disabled={!isReady || loading} style={s.btn(isReady && !loading)}>
-        {loading ? 'Looking up...' : 'Get Vehicle ID'}
-      </button>
+      {loading && <div style={{ textAlign: 'center', color: '#6b7280', fontSize: '14px' }}>Loading vehicles...</div>}
+      {vehicles.length > 1 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <label style={s.label}>Select your configuration</label>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '4px', fontSize: '11px', color: '#9ca3af', padding: '0 16px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            <div>CCS Power</div><div>MCS Power</div><div>CCS Position</div>
+          </div>
+          {vehicles.map(v => (
+            <div key={v.vehicle_id} onClick={() => selectVehicle(v)} style={s.vehicleRow(vehicleId === v.vehicle_id)}>
+              <div style={{ fontWeight: 500 }}>{v.ccs_charging_power} kW</div>
+              <div>{v.mcs_charging_power > 0 ? `${v.mcs_charging_power} kW` : '—'}</div>
+              <div>{v.position_ccs}</div>
+            </div>
+          ))}
+        </div>
+      )}
       {error && <div style={s.err}>{error}</div>}
     </div>
   )
