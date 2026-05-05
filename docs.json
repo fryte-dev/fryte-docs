@@ -79,7 +79,7 @@
     "primary": {
       "type": "button",
       "label": "Get API Key",
-      "href": "mailto:team@fryte.eu"
+      "href": "/#authentication"
     }
   },
   "contextual": {

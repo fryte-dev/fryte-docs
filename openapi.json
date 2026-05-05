@@ -1,15 +1,92 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "FRYTE Planner v2 API",
+    "title": "FRYTE Planner API",
     "version": "2.0.0"
   },
-  "servers": [
-    {
-      "url": "https://staging.api.fryte.xyz"
-    }
-  ],
   "paths": {
+    "/planner": {
+      "post": {
+        "tags": [
+          "planner"
+        ],
+        "summary": "Plan Tour",
+        "description": "Plan a tour by performing routing, retrieving vehicle and POI data, running a simulation, computing toll totals, and returning an assembled PlannerResponse.\n\nPerforms routing using either a provided flexpolyline or start/stop positions, augments route data with the planner request, fetches vehicle information, obtains POIs along the route (optionally via the eco-movement feature), invokes the simulation service, computes a toll summary from the route, and returns the final PlannerResponse.\n\nReturns:\n    PlannerResponse: Response containing vehicle_id, battery_level_start, battery_level_end, sections, poi_list, optimal_departure_time, time_windows_reachable, toll_summary, and other planner metadata.\n\nRaises:\n    HTTPException: If the request is invalid or if any downstream service call (routing, vehicle info, POI retrieval, or simulation) fails.",
+        "operationId": "plan_tour_planner_post",
+        "security": [
+          {
+            "HybridAuthBearer": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "corridor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 20000,
+              "minimum": 1000,
+              "default": 8000,
+              "title": "Corridor"
+            }
+          },
+          {
+            "name": "tenant_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Tenant ID",
+              "title": "Tenant Id"
+            },
+            "description": "Tenant ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlannerRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlannerResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/planner/v2": {
       "post": {
         "tags": [
@@ -310,671 +387,10 @@
           }
         }
       }
-    },
-    "/vehicles/info/oems": {
-      "get": {
-        "tags": [
-          "vehicles"
-        ],
-        "summary": "List manufacturers",
-        "description": "Retrieve a list of all available vehicle manufacturers (OEMs). Optionally filter by name.",
-        "operationId": "get_oems_vehicles_info_oems_get",
-        "security": [
-          {
-            "HybridAuthBearer": []
-          },
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "manufacturer",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "items": {
-                    "type": "string"
-                  },
-                  "type": "array"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Filter by manufacturer name(s).",
-              "title": "Manufacturer"
-            },
-            "description": "Filter by manufacturer name(s)."
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "additionalProperties": {
-                    "type": "string"
-                  },
-                  "title": "OEMs",
-                  "description": "Mapping of manufacturer names to their codes.",
-                  "example": {
-                    "Daimler": "01",
-                    "MAN": "02",
-                    "Volvo": "03",
-                    "Scania": "05",
-                    "DAF": "06",
-                    "Iveco": "07",
-                    "Renault": "08"
-                  }
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/vehicles/info/models": {
-      "get": {
-        "tags": [
-          "vehicles"
-        ],
-        "summary": "List models",
-        "description": "Retrieve a list of all available vehicle models. Optionally filter by manufacturer.",
-        "operationId": "get_models_vehicles_info_models_get",
-        "security": [
-          {
-            "HybridAuthBearer": []
-          },
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "manufacturer",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "items": {
-                    "type": "string"
-                  },
-                  "type": "array"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Filter models by manufacturer name(s).",
-              "title": "Manufacturer"
-            },
-            "description": "Filter models by manufacturer name(s)."
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "additionalProperties": {
-                    "type": "object",
-                    "additionalProperties": {
-                      "type": "string"
-                    }
-                  },
-                  "title": "Models",
-                  "description": "Mapping of manufacturers to their models and codes.",
-                  "example": {
-                    "Daimler": {
-                      "eActros": "01"
-                    },
-                    "MAN": {
-                      "eTGX": "01"
-                    },
-                    "Volvo": {
-                      "FH electric": "01"
-                    },
-                    "Scania": {
-                      "45 R": "01",
-                      "P310": "02"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/vehicles/info/battery_capacities": {
-      "get": {
-        "tags": [
-          "vehicles"
-        ],
-        "summary": "List battery capacities",
-        "description": "Retrieve a list of all available battery capacities (in kWh) across the vehicle database.",
-        "operationId": "get_battery_capacities_vehicles_info_battery_capacities_get",
-        "security": [
-          {
-            "HybridAuthBearer": []
-          },
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "search",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "items": {
-                    "type": "string"
-                  },
-                  "type": "array"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Filter by specific capacity values.",
-              "title": "Search"
-            },
-            "description": "Filter by specific capacity values."
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "additionalProperties": true,
-                  "title": "Battery Capacities",
-                  "description": "Available battery capacities."
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/vehicles/info/by_description": {
-      "post": {
-        "tags": [
-          "vehicles"
-        ],
-        "summary": "Get vehicle ID by description",
-        "description": "Look up a vehicle ID by providing the manufacturer, model, battery capacity, and charging power. Returns the 12-digit vehicle ID string that can be used with the planner endpoints.",
-        "operationId": "get_vehicle_id_by_description_vehicles_info_by_description_post",
-        "security": [
-          {
-            "HybridAuthBearer": []
-          },
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/VehicleDescriptionRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string",
-                  "title": "Vehicle ID",
-                  "description": "The 12-digit vehicle ID.",
-                  "example": "010160700001"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/vehicles/info/{vehicle_id}": {
-      "get": {
-        "tags": [
-          "vehicles"
-        ],
-        "summary": "Get vehicle details",
-        "description": "Retrieve full vehicle details by its 12-digit vehicle ID. Returns manufacturer, model, battery capacity, and charging power information.",
-        "operationId": "get_vehicle_vehicles_info_vehicle_id_get",
-        "security": [
-          {
-            "HybridAuthBearer": []
-          },
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "vehicle_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "description": "The 12-digit vehicle identifier.",
-              "title": "Vehicle ID"
-            },
-            "description": "The 12-digit vehicle identifier."
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/VehicleInfo"
-                  },
-                  "title": "Vehicle Details"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/routing/route": {
-      "post": {
-        "tags": [
-          "routing"
-        ],
-        "summary": "Calculate route",
-        "description": "Calculate a route between two points. Pass coordinates as `\"latitude,longitude\"` strings.",
-        "operationId": "calculate_route_routing_route_post",
-        "security": [
-          {
-            "HybridAuthBearer": []
-          },
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RouteRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RouteResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/routing/geocode": {
-      "get": {
-        "tags": [
-          "routing"
-        ],
-        "summary": "Geocode address",
-        "description": "Convert a street address to geographic coordinates (latitude and longitude).",
-        "operationId": "get_geo_coordinates_routing_geocode_get",
-        "security": [
-          {
-            "HybridAuthBearer": []
-          },
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "address",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "description": "Street address to geocode.",
-              "title": "Address"
-            },
-            "description": "Street address to geocode."
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GeocodeResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/poi/cpos": {
-      "get": {
-        "tags": [
-          "poi"
-        ],
-        "summary": "List charging operators",
-        "description": "Retrieve a list of all Charge Point Operators (CPOs), sorted by number of stations.",
-        "operationId": "get_cpos_poi_cpos_get",
-        "security": [
-          {
-            "HybridAuthBearer": []
-          },
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/CPO"
-                  },
-                  "title": "CPO List"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
     }
   },
   "components": {
     "schemas": {
-      "RouteRequest": {
-        "properties": {
-          "departure": {
-            "type": "string",
-            "title": "Departure",
-            "description": "Departure coordinates as \"latitude,longitude\"."
-          },
-          "destination": {
-            "type": "string",
-            "title": "Destination",
-            "description": "Destination coordinates as \"latitude,longitude\"."
-          }
-        },
-        "type": "object",
-        "required": [
-          "departure",
-          "destination"
-        ],
-        "title": "RouteRequest",
-        "example": {
-          "departure": "48.7758,9.1829",
-          "destination": "52.5200,13.4050"
-        }
-      },
-      "RouteResponse": {
-        "properties": {
-          "route_data": {
-            "type": "object",
-            "additionalProperties": true,
-            "title": "Route Data",
-            "description": "Route geometry, distance, and duration."
-          }
-        },
-        "type": "object",
-        "required": [
-          "route_data"
-        ],
-        "title": "RouteResponse"
-      },
-      "GeocodeResponse": {
-        "properties": {
-          "latitude": {
-            "type": "number",
-            "title": "Latitude",
-            "description": "Latitude of the geocoded address."
-          },
-          "longitude": {
-            "type": "number",
-            "title": "Longitude",
-            "description": "Longitude of the geocoded address."
-          }
-        },
-        "type": "object",
-        "required": [
-          "latitude",
-          "longitude"
-        ],
-        "title": "GeocodeResponse",
-        "example": {
-          "latitude": 48.7758,
-          "longitude": 9.1829
-        }
-      },
-      "CPO": {
-        "properties": {
-          "name": {
-            "type": "string",
-            "title": "Name",
-            "description": "Name of the Charge Point Operator."
-          }
-        },
-        "type": "object",
-        "required": [
-          "name"
-        ],
-        "title": "CPO"
-      },
-      "VehicleDescriptionRequest": {
-        "properties": {
-          "manufacturer": {
-            "type": "string",
-            "title": "Manufacturer",
-            "description": "Vehicle manufacturer name (e.g. Daimler, MAN, Volvo)."
-          },
-          "model": {
-            "type": "string",
-            "title": "Model",
-            "description": "Vehicle model name (e.g. eActros, eTGX, FH electric)."
-          },
-          "battery_capacity_kwh": {
-            "type": "number",
-            "title": "Battery Capacity (kWh)",
-            "description": "Usable battery capacity in kilowatt-hours."
-          },
-          "charging_power_kw": {
-            "type": "number",
-            "title": "Charging Power (kW)",
-            "description": "Peak CCS charging power in kilowatts."
-          }
-        },
-        "type": "object",
-        "required": [
-          "manufacturer",
-          "model",
-          "battery_capacity_kwh",
-          "charging_power_kw"
-        ],
-        "title": "VehicleDescriptionRequest",
-        "description": "Describe your vehicle to look up its ID.",
-        "example": {
-          "manufacturer": "Daimler",
-          "model": "eActros",
-          "battery_capacity_kwh": 600,
-          "charging_power_kw": 700
-        }
-      },
-      "VehicleInfo": {
-        "properties": {
-          "vehicle_id": {
-            "type": "string",
-            "title": "Vehicle ID",
-            "description": "The 12-digit vehicle identifier."
-          },
-          "manufacturer": {
-            "type": "string",
-            "title": "Manufacturer",
-            "description": "Vehicle manufacturer name."
-          },
-          "model": {
-            "type": "string",
-            "title": "Model",
-            "description": "Vehicle model name."
-          },
-          "battery_capacity_kwh": {
-            "type": "number",
-            "title": "Battery Capacity (kWh)",
-            "description": "Usable battery capacity in kilowatt-hours."
-          },
-          "charging_power_kw": {
-            "type": "number",
-            "title": "Charging Power (kW)",
-            "description": "Peak CCS charging power in kilowatts."
-          },
-          "mcs_charging_power_kw": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "MCS Charging Power (kW)",
-            "description": "MCS charging power in kilowatts, if supported."
-          }
-        },
-        "type": "object",
-        "required": [
-          "vehicle_id",
-          "manufacturer",
-          "model",
-          "battery_capacity_kwh",
-          "charging_power_kw"
-        ],
-        "title": "VehicleInfo",
-        "description": "Full vehicle details returned by the lookup endpoint.",
-        "example": {
-          "vehicle_id": "010160700001",
-          "manufacturer": "Daimler",
-          "model": "eActros",
-          "battery_capacity_kwh": 600,
-          "charging_power_kw": 700,
-          "mcs_charging_power_kw": null
-        }
-      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -1060,7 +476,7 @@
           "tour_id": {
             "type": "integer",
             "title": "Tour Id",
-            "description": "Internal tour identifier."
+            "description": "Tour identifier."
           },
           "vehicle_id": {
             "anyOf": [
@@ -1102,7 +518,7 @@
               }
             ],
             "title": "Code",
-            "description": "Machine-readable reason code."
+            "description": "Reason code: no_chargers_available or battery_depleted_mid_route."
           },
           "message": {
             "anyOf": [
@@ -1132,12 +548,12 @@
           "tour_id": {
             "type": "integer",
             "title": "Tour Id",
-            "description": "Internal tour identifier."
+            "description": "Tour identifier."
           },
           "status": {
             "type": "string",
             "title": "Status",
-            "description": "Job status: succeeded or not_drivable."
+            "description": "Job lifecycle status: succeeded or not_drivable."
           },
           "battery_level_start": {
             "type": "number",
@@ -1152,7 +568,7 @@
           "qualification": {
             "type": "string",
             "title": "Qualification",
-            "description": "Route feasibility: Driveable or not_drivable."
+            "description": "Route feasibility result: Driveable or not_drivable. See status for job lifecycle."
           },
           "sections": {
             "items": {
@@ -1191,7 +607,7 @@
               }
             ],
             "title": "Optimal Departure Time",
-            "description": "Optimal departure time (HH:MM:SS) for reaching all time windows, if applicable."
+            "description": "Optimal departure time (ISO-8601) for reaching all time windows, if applicable."
           },
           "time_windows_reachable": {
             "anyOf": [
@@ -1203,7 +619,7 @@
               }
             ],
             "title": "Time Windows Reachable",
-            "description": "Whether all time windows could be reached."
+            "description": "Whether all time windows could be reached: 'True', 'False', or 'Not considered'."
           },
           "available_charging_stations": {
             "anyOf": [
@@ -1312,7 +728,7 @@
           "vehicle_id": {
             "type": "string",
             "title": "Vehicle Id",
-            "description": "The unique identifier of the vehicle. See [Vehicles](/planner/vehicles)."
+            "description": "The unique identifier of the vehicle."
           },
           "battery_level_start": {
             "type": "number",
@@ -1358,7 +774,7 @@
               }
             ],
             "title": "Service Time Departure Min",
-            "description": "Service time at departure in minutes, counted as driving time.",
+            "description": "Service time at departure in minutes. Added to total tour duration.",
             "default": 0
           },
           "start_time_tour": {
@@ -1419,6 +835,10 @@
           "vehicle_id": "010160700001"
         }
       },
+      "PlannerResponse": {
+        "additionalProperties": true,
+        "type": "object"
+      },
       "PlannerV2SubmitResponse": {
         "properties": {
           "message": {
@@ -1453,7 +873,7 @@
           "tour_id": {
             "type": "integer",
             "title": "Tour Id",
-            "description": "Internal tour identifier."
+            "description": "Tour identifier."
           },
           "warnings": {
             "anyOf": [
@@ -1759,7 +1179,7 @@
               }
             ],
             "title": "Poi Id",
-            "description": "Internal station identifier."
+            "description": "Station identifier."
           },
           "mapping": {
             "anyOf": [
@@ -1771,7 +1191,7 @@
               }
             ],
             "title": "Mapping",
-            "description": "Cluster group identifier."
+            "description": "Station grouping identifier."
           },
           "represents": {
             "anyOf": [
@@ -1783,7 +1203,7 @@
               }
             ],
             "title": "Represents",
-            "description": "Whether this station represents its cluster."
+            "description": "Whether this station represents its group."
           },
           "poi_crash": {
             "anyOf": [
@@ -2045,7 +1465,7 @@
               }
             ],
             "title": "Service Time Min",
-            "description": "Total stop duration in minutes."
+            "description": "Total stop duration in minutes (charging + service + rest)."
           },
           "arrival_time": {
             "anyOf": [
@@ -2060,7 +1480,7 @@
               }
             ],
             "title": "Arrival Time",
-            "description": "Arrival time at this stop."
+            "description": "Arrival time at this stop (ISO-8601)."
           },
           "additional_stops": {
             "anyOf": [
@@ -2203,7 +1623,7 @@
               }
             ],
             "title": "Polyline",
-            "description": "Encoded route geometry (flexpolyline)."
+            "description": "Encoded route geometry in HERE Flexible Polyline format (see https://github.com/heremaps/flexible-polyline)."
           },
           "start_pos": {
             "anyOf": [
@@ -2284,7 +1704,7 @@
               }
             ],
             "title": "Service Time Min",
-            "description": "Service time at the section end in minutes."
+            "description": "Service time at the section destination in minutes."
           },
           "power_available_kW": {
             "anyOf": [
@@ -2312,7 +1732,7 @@
               }
             ],
             "title": "Turnbyturnactions",
-            "description": "Turn-by-turn navigation instructions."
+            "description": "Turn-by-turn navigation instructions from the HERE Routing API."
           },
           "tolls": {
             "anyOf": [
@@ -2328,7 +1748,7 @@
               }
             ],
             "title": "Tolls",
-            "description": "Toll data for this section."
+            "description": "Toll data for this section from the HERE Routing API."
           },
           "poi_summary": {
             "anyOf": [
@@ -2371,7 +1791,7 @@
               }
             ],
             "title": "Polyline",
-            "description": "Encoded polyline string representing the route section."
+            "description": "Encoded polyline string representing the route section. Uses HERE Flexible Polyline encoding (see https://github.com/heremaps/flexible-polyline)."
           },
           "start_pos": {
             "anyOf": [
@@ -2672,5 +2092,10 @@
         "scheme": "bearer"
       }
     }
-  }
+  },
+  "servers": [
+    {
+      "url": "https://api.fryte.eu"
+    }
+  ]
 }
