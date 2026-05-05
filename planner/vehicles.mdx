@@ -112,7 +112,7 @@ export const VehicleFinder = () => {
     wrap: { display: 'flex', flexDirection: 'column', gap: '20px', padding: '24px', borderRadius: '12px', border: '1px solid #e2e8f0', margin: '24px 0' },
     label: { display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '6px', color: '#374151', textTransform: 'uppercase', letterSpacing: '0.5px' },
     input: (on = true) => ({ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '14px', backgroundColor: on ? '#fff' : '#f3f4f6', cursor: on ? 'pointer' : 'not-allowed', outline: 'none', boxSizing: 'border-box' }),
-    btn: (on = true) => ({ padding: '12px', borderRadius: '8px', border: 'none', backgroundColor: on ? '#F57C00' : '#d1d5db', color: '#fff', fontSize: '14px', fontWeight: 600, cursor: on ? 'pointer' : 'default', width: '100%' }),
+    btn: (on = true) => ({ padding: '12px', borderRadius: '8px', border: 'none', backgroundColor: on ? '#F57C00' : '#9ca3af', color: '#fff', fontSize: '14px', fontWeight: 600, cursor: on ? 'pointer' : 'default', width: '100%' }),
     btnOutline: { padding: '8px 16px', borderRadius: '6px', border: '1px solid #d1d5db', backgroundColor: 'transparent', fontSize: '13px', cursor: 'pointer', color: '#374151' },
     err: { padding: '10px 14px', borderRadius: '8px', backgroundColor: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', fontSize: '13px' },
     vehicleRow: (selected, hovered) => ({
@@ -212,8 +212,7 @@ Every planner request requires a `vehicle_id`. Authenticate with your [API key](
 
 <VehicleFinder />
 
-## Understanding the Vehicle ID
-
+<Accordion title="Understanding the Vehicle ID">
 The ID is a 12-digit code. Each pair of digits represents a vehicle attribute:
 
 | Digits | Meaning | Example |
@@ -225,3 +224,4 @@ The ID is a 12-digit code. Each pair of digits represents a vehicle attribute:
 | 9–10 | MCS charging power | `00` = not supported |
 | 11 | MCS flag | `0` = no MCS |
 | 12 | CCS position | `1` = right, `2` = left, `3` = both |
+</Accordion>
