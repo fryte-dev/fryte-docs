@@ -40,7 +40,7 @@
               "GET /planner/jobs",
               "GET /planner/optimizations/{optimization_id}/result"
             ]
-          },
+          }
         ]
       }
     ]
