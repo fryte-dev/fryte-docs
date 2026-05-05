@@ -15,7 +15,7 @@
         "openapi": "openapi.json",
         "groups": [
           {
-            "group": "Introduction",
+            "group": "Getting Started",
             "pages": [
               "index",
               "planner/quickstart",
@@ -42,7 +42,7 @@
             ]
           },
           {
-            "group": "Vehicle Lookup",
+            "group": "Vehicles",
             "pages": [
               "GET /vehicles/info/oems",
               "GET /vehicles/info/models",

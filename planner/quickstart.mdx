@@ -6,13 +6,11 @@ description: Plan a Stuttgart → Berlin trip and find where the truck needs to 
 ## 1. Submit your route
 
 <Info>
-**Prerequisites:** An [API key](/#authentication) and a [Vehicle ID](/planner/vehicles). Contact [team@fryte.eu](mailto:team@fryte.eu) if you don't have these yet.
+You need an [API key](/#authentication) and a [Vehicle ID](/planner/vehicles).
 </Info>
 
-Send your vehicle, starting battery level, route, and charger requirements. The `poi_info` field is required — it tells the optimizer what kind of charging stations to look for.
-
 ```bash
-curl -X POST "https://api.fryte.eu/planner/v2?corridor=8000" \
+curl -X POST "https://api.fryte.eu/planner/v2" \
   -H "Authorization: Bearer <your-token>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -36,13 +34,13 @@ The API starts optimizing in the background and returns identifiers to track the
 
 ```json
 {
-  "optimization_id": 7653,
-  "job_id": "989b3289-2947-4bc1-a927-882fbcaa33f9",
-  "tour_id": 7610
+  "optimization_id": 7716,
+  "job_id": "20ccaf8b-d36b-4c21-bb32-d00e758abe14",
+  "tour_id": 7673
 }
 ```
 
-## 2. Wait for the result
+## 2. Poll for completion
 
 Poll with your `job_id` until `status` is `succeeded`.
 
@@ -54,62 +52,63 @@ curl "https://api.fryte.eu/planner/jobs/<job_id>" \
 ```json
 {
   "status": "succeeded",
-  "optimization_id": 7653,
-  "job_id": "989b3289-2947-4bc1-a927-882fbcaa33f9",
-  "tour_id": 7610,
+  "optimization_id": 7716,
+  "job_id": "20ccaf8b-d36b-4c21-bb32-d00e758abe14",
+  "tour_id": 7673,
   "vehicle_id": "010160700001"
 }
 ```
 
 ## 3. Get your charging plan
 
-Once `status` is `succeeded`, fetch the optimized route with your `optimization_id`.
-
 ```bash
-curl "https://api.fryte.eu/planner/optimizations/7653/result" \
+curl "https://api.fryte.eu/planner/optimizations/7716/result" \
   -H "Authorization: Bearer <your-token>"
 ```
 
-The optimizer found **two charging stops** for the 640 km route. Your single section became three — one per leg between stops:
+The optimizer found two charging stops for the 640 km route:
 
 ```json
 {
   "qualification": "Driveable",
   "battery_level_start": 0.8,
-  "battery_level_end": 0.27,
+  "battery_level_end": 0.19,
   "sections": [
     {
       "start_pos": [48.78, 9.18, 0.80],
-      "stop_pos": [50.05, 11.62, 0.81],
-      "sec_length_km": 291.1,
-      "sec_duration_min": 237.4,
+      "stop_pos": [50.05, 11.62, 0.48],
       "poi_summary": {
-        "name": "Milence",
-        "address": "Frankenring 1",
-        "power_available_kW": 400,
-        "energy_kWh": 357.0,
-        "charge_time_min": 59.5
+        "name": "IONITY",
+        "address": "Bayreuther Straße 1",
+        "power_available_kW": 350.0,
+        "energy_kWh": 168.0,
+        "charge_time_min": 32.0,
+        "service_time_min": 35.0
       }
     },
     {
-      "start_pos": [50.05, 11.62, 0.81],
-      "stop_pos": [50.80, 11.90, 0.66],
-      "sec_length_km": 95.4,
-      "sec_duration_min": 71.8,
+      "start_pos": [50.06, 11.62, 0.48],
+      "stop_pos": [50.37, 11.79, 0.65],
       "poi_summary": {
-        "name": "mblty charging",
-        "address": "An der Autobahn 1",
-        "power_available_kW": 300,
-        "energy_kWh": 36.0,
-        "charge_time_min": 8.0
+        "name": "IONITY",
+        "address": "Sieggrubenstraße 2",
+        "power_available_kW": 350.0,
+        "energy_kWh": 178.5,
+        "charge_time_min": 34.0,
+        "service_time_min": 37.0
       }
     },
     {
-      "start_pos": [50.80, 11.90, 0.66],
-      "stop_pos": [52.52, 13.41, 0.27],
-      "sec_length_km": 253.6,
-      "sec_duration_min": 208.5,
-      "poi_summary": null
+      "start_pos": [50.37, 11.79, 0.65],
+      "stop_pos": [52.52, 13.40, 0.19],
+      "poi_summary": {
+        "name": "Destination",
+        "address": "See Destination",
+        "power_available_kW": 0,
+        "energy_kWh": 0,
+        "charge_time_min": 0,
+        "service_time_min": 0
+      }
     }
   ],
   "toll_summary": [],
@@ -117,25 +116,4 @@ The optimizer found **two charging stops** for the 640 km route. Your single sec
 }
 ```
 
-**How to read this:**
-- **`qualification`** — `Driveable` means the route works. `not_drivable` means the truck can't make it with these parameters.
-- **`start_pos` / `stop_pos`** — `[lat, lon, state_of_charge]`. The third value is the battery level at that point.
-- **`poi_summary`** — the charging station selected for that stop. `null` on the last section means no charging needed (destination).
-- **`poi_list`** — all candidate stations the optimizer considered.
 
-## Endpoint Reference
-
-<CardGroup cols={2}>
-  <Card title="Plan Tour V2" icon="paper-plane" href="/api-reference/planner/plan-tour-v2">
-    Submit a route for optimization.
-  </Card>
-  <Card title="Get Job Status" icon="clock" href="/api-reference/planner/get-job-status">
-    Poll for optimization progress.
-  </Card>
-  <Card title="List Jobs" icon="list" href="/api-reference/planner/list-jobs">
-    List all optimization jobs.
-  </Card>
-  <Card title="Get Optimization Result" icon="route" href="/api-reference/planner/get-optimization-result">
-    Retrieve the optimized route.
-  </Card>
-</CardGroup>

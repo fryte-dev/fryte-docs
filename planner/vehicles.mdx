@@ -1,5 +1,5 @@
 ---
-title: Vehicle Lookup
+title: Vehicles
 description: Find your Vehicle ID
 ---
 
@@ -177,13 +177,13 @@ export const VehicleFinder = () => {
   )
 }
 
-The planner needs a `vehicle_id` to know your truck's battery, charging specs, and connector setup. Authenticate with your [API key](/#authentication) and look it up below.
+Every planner request requires a `vehicle_id`. Authenticate with your [API key](/#authentication) and select your truck below to get yours.
 
 <VehicleFinder />
 
-## How it works
+## Understanding the Vehicle ID
 
-The Vehicle ID is a 12-digit code that encodes your truck's specs. The lookup tool queries the vehicle database for you — just select your manufacturer, model, and enter battery and charging specs.
+The ID is a 12-digit code. Each pair of digits represents a vehicle attribute:
 
 | Digits | Meaning | Example |
 |--------|---------|---------|

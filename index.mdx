@@ -1,24 +1,25 @@
 ---
 title: Overview
-description: Introduction to the FRYTE Planner API
 hideFooterPagination: true
 ---
 
-The FRYTE Planner API optimizes routes for electric trucks. Submit a route, and the API returns an optimized plan with charging stops, battery levels, energy consumption, and toll costs — ready to integrate into your TMS.
+The FRYTE API plans routes for electric trucks. Given an origin, destination, and vehicle, it returns where and how long to charge — optimized for time, energy, and cost.
 
 <CardGroup cols={3}>
   <Card title="Quickstart" icon="bolt" href="/planner/quickstart">
     Submit a route and get an optimized charging plan.
   </Card>
-  <Card title="Vehicle Database" icon="truck" href="/planner/vehicles">
-    Find your Vehicle ID.
+  <Card title="Vehicles" icon="truck" href="/planner/vehicles">
+    Look up the Vehicle ID required for every planner request.
   </Card>
-  <Card title="Errors" icon="triangle-exclamation" href="/planner/errors">
-    HTTP status codes and error response format.
+  <Card title="Examples" icon="route" href="/planner/examples/intermediate-stops">
+    Sample requests and responses for common use cases.
   </Card>
 </CardGroup>
 
 ## Base URL
+
+All API requests use the following base URL:
 
 ```
 https://api.fryte.eu
@@ -26,13 +27,13 @@ https://api.fryte.eu
 
 ## Authentication
 
-All requests require a Bearer token in the `Authorization` header:
+Include your API key as a Bearer token in the `Authorization` header:
 
 ```
 Authorization: Bearer <your-token>
 ```
 
-Contact us at [team@fryte.eu](mailto:team@fryte.eu) to obtain your API key.
+Contact [team@fryte.eu](mailto:team@fryte.eu) to obtain your API key.
 
 ## How it works
 
@@ -52,4 +53,10 @@ The API is asynchronous. Three steps:
 
 ## Key Concepts
 
-{/* TODO: Klären ob und welche Key Concepts hier erklärt werden sollen. */}
+**Routing** — {/* TODO */}
+
+**POI Data** — {/* TODO */}
+
+**Simulation** — {/* TODO */}
+
+**Optimization** — {/* TODO */}

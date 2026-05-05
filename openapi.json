@@ -1312,7 +1312,7 @@
           "vehicle_id": {
             "type": "string",
             "title": "Vehicle Id",
-            "description": "The unique identifier of the vehicle. See [Vehicle Lookup](/planner/vehicles)."
+            "description": "The unique identifier of the vehicle. See [Vehicles](/planner/vehicles)."
           },
           "battery_level_start": {
             "type": "number",
