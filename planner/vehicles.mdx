@@ -70,7 +70,9 @@ export const VehicleFinder = () => {
       })
       if (!res.ok) {
         const body = await res.json().catch(() => null)
-        throw new Error(body?.detail || `Vehicle not found`)
+        const detail = body?.detail
+        const msg = typeof detail === 'string' ? detail : Array.isArray(detail) ? detail.map(d => d.msg || JSON.stringify(d)).join(', ') : 'Vehicle not found'
+        throw new Error(msg)
       }
       const id = await res.json()
       const vid = typeof id === 'string' ? id : String(id)
