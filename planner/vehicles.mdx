@@ -109,18 +109,18 @@ export const VehicleFinder = () => {
   }
 
   const s = {
-    wrap: { display: 'flex', flexDirection: 'column', gap: '20px', padding: '24px', borderRadius: '12px', border: '1px solid #e2e8f0', margin: '24px 0' },
-    label: { display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '6px', color: '#374151', textTransform: 'uppercase', letterSpacing: '0.5px' },
-    input: (on = true) => ({ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '14px', backgroundColor: on ? '#fff' : '#f3f4f6', cursor: on ? 'pointer' : 'not-allowed', outline: 'none', boxSizing: 'border-box' }),
+    wrap: { display: 'flex', flexDirection: 'column', gap: '20px', padding: '24px', borderRadius: '12px', border: '1px solid rgba(128,128,128,0.25)', margin: '24px 0' },
+    label: { display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '6px', color: 'inherit', opacity: 0.7, textTransform: 'uppercase', letterSpacing: '0.5px' },
+    input: (on = true) => ({ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid rgba(128,128,128,0.3)', fontSize: '14px', backgroundColor: on ? 'transparent' : 'rgba(128,128,128,0.1)', color: 'inherit', cursor: on ? 'pointer' : 'not-allowed', outline: 'none', boxSizing: 'border-box' }),
     btn: (on = true) => ({ padding: '12px', borderRadius: '8px', border: 'none', backgroundColor: on ? '#F57C00' : '#9ca3af', color: '#fff', fontSize: '14px', fontWeight: 600, cursor: on ? 'pointer' : 'default', width: '100%' }),
-    btnOutline: { padding: '8px 16px', borderRadius: '6px', border: '1px solid #d1d5db', backgroundColor: 'transparent', fontSize: '13px', cursor: 'pointer', color: '#374151' },
-    err: { padding: '10px 14px', borderRadius: '8px', backgroundColor: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', fontSize: '13px' },
+    btnOutline: { padding: '8px 16px', borderRadius: '6px', border: '1px solid rgba(128,128,128,0.3)', backgroundColor: 'transparent', fontSize: '13px', cursor: 'pointer', color: 'inherit' },
+    err: { padding: '10px 14px', borderRadius: '8px', backgroundColor: 'rgba(220,38,38,0.1)', border: '1px solid rgba(220,38,38,0.3)', color: '#dc2626', fontSize: '13px' },
     vehicleRow: (selected, hovered) => ({
       padding: '12px 16px', borderRadius: '8px', cursor: 'pointer',
-      border: selected ? '2px solid #F57C00' : hovered ? '1px solid #F57C00' : '1px solid #e5e7eb',
-      backgroundColor: selected ? '#fff7ed' : hovered ? '#fff7ed' : '#fff',
+      border: selected ? '2px solid #F57C00' : hovered ? '1px solid #F57C00' : '1px solid rgba(128,128,128,0.25)',
+      backgroundColor: selected ? 'rgba(245,124,0,0.1)' : hovered ? 'rgba(245,124,0,0.05)' : 'transparent',
       display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '4px',
-      fontSize: '13px', color: '#374151', transition: 'all 0.15s',
+      fontSize: '13px', color: 'inherit', transition: 'all 0.15s',
     }),
   }
 
@@ -140,10 +140,10 @@ export const VehicleFinder = () => {
   if (vehicleId && vehicleDetails) return (
     <div style={s.wrap}>
       <div style={{ textAlign: 'center', padding: '8px 0' }}>
-        <div style={{ fontSize: '13px', color: '#6b7280', marginBottom: '8px' }}>Your Vehicle ID</div>
-        <code style={{ fontSize: '28px', fontWeight: 700, letterSpacing: '2px', color: '#111827' }}>{vehicleId}</code>
+        <div style={{ fontSize: '13px', color: 'inherit', opacity: 0.6, marginBottom: '8px' }}>Your Vehicle ID</div>
+        <code style={{ fontSize: '28px', fontWeight: 700, letterSpacing: '2px', color: 'inherit' }}>{vehicleId}</code>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', fontSize: '13px', color: '#6b7280', padding: '12px 16px', backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', fontSize: '13px', color: 'inherit', opacity: 0.7, padding: '12px 16px', backgroundColor: 'rgba(128,128,128,0.06)', borderRadius: '8px', border: '1px solid rgba(128,128,128,0.25)' }}>
         <div><span style={{ fontWeight: 500 }}>Manufacturer:</span> {vehicleDetails.manufacturer}</div>
         <div><span style={{ fontWeight: 500 }}>Model:</span> {vehicleDetails.model}</div>
         <div><span style={{ fontWeight: 500 }}>Battery:</span> {vehicleDetails.battery_capacity} kWh</div>
@@ -185,11 +185,11 @@ export const VehicleFinder = () => {
           </select>
         </div>
       </div>
-      {loading && <div style={{ textAlign: 'center', color: '#6b7280', fontSize: '14px' }}>Loading vehicles...</div>}
+      {loading && <div style={{ textAlign: 'center', color: 'inherit', opacity: 0.6, fontSize: '14px' }}>Loading vehicles...</div>}
       {vehicles.length > 1 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <label style={s.label}>Select your configuration</label>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '4px', fontSize: '11px', color: '#9ca3af', padding: '0 16px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '4px', fontSize: '11px', color: 'inherit', opacity: 0.5, padding: '0 16px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
             <div>CCS Power</div><div>MCS Power</div><div>CCS Position</div>
           </div>
           {vehicles.map(v => (
