@@ -3,7 +3,7 @@ title: Overview
 hideFooterPagination: true
 ---
 
-The FRYTE API plans routes for electric trucks. Given an origin, destination, and vehicle, it returns where and how long to charge — optimized for time, energy, and cost.
+The FRYTE API plans routes for electric trucks. Given an origin, destination, and vehicle, it returns where and how long to charge — optimized for time, energy, and cost. All requests use the base URL `https://api.fryte.eu`.
 
 <CardGroup cols={3}>
   <Card title="Quickstart" icon="bolt" href="/planner/quickstart">
@@ -17,17 +17,9 @@ The FRYTE API plans routes for electric trucks. Given an origin, destination, an
   </Card>
 </CardGroup>
 
-## Base URL
-
-All API requests use the following base URL:
-
-```
-https://api.fryte.eu
-```
-
 ## Authentication
 
-Include your API key as a Bearer token in the `Authorization` header:
+Every request must include your API key. Pass it in the `Authorization` header:
 
 ```
 Authorization: Bearer <your-token>
@@ -37,26 +29,33 @@ Contact [team@fryte.eu](mailto:team@fryte.eu) to obtain your API key.
 
 ## How it works
 
-The API is asynchronous. Three steps:
+The API is asynchronous. Submit a request, then poll for the result.
 
 <Steps>
-  <Step title="Submit a route">
-    `POST /planner/v2` — returns a `job_id` and `optimization_id` (HTTP 202).
+  <Step title="Submit your route">
+    Send origin, destination, and vehicle to [`POST /planner/v2`](/api-reference/planner/submit-route-optimization). You'll receive a `job_id` to track progress and an `optimization_id` to fetch the result.
   </Step>
-  <Step title="Poll for completion">
-    `GET /planner/jobs/{job_id}` — repeat until status is `succeeded`.
+  <Step title="Check progress">
+    Poll [`GET /planner/jobs/{job_id}`](/api-reference/planner/get-job-status) to check whether the optimization has completed.
   </Step>
-  <Step title="Retrieve the result">
-    `GET /planner/optimizations/{optimization_id}/result` — the optimized route with charging stops, battery levels, and toll costs.
+  <Step title="Get your charging plan">
+    Retrieve the result from [`GET /planner/optimizations/{optimization_id}/result`](/api-reference/planner/get-optimization-result).
   </Step>
 </Steps>
 
 ## Key Concepts
 
-**Routing** — {/* TODO */}
-
-**POI Data** — {/* TODO */}
-
-**Simulation** — {/* TODO */}
-
-**Optimization** — {/* TODO */}
+<CardGroup cols={2}>
+  <Card title="Routing" icon="map">
+    The driving path between all stops.
+  </Card>
+  <Card title="POI Data" icon="charging-station">
+    Charging stations along the route corridor.
+  </Card>
+  <Card title="Simulation" icon="microchip">
+    Predicts how the battery drains along the route based on vehicle, payload, and terrain.
+  </Card>
+  <Card title="Optimization" icon="gauge-high">
+    Decides where and how long to charge based on the simulation.
+  </Card>
+</CardGroup>
