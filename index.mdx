@@ -7,7 +7,7 @@ The FRYTE API plans routes for electric trucks. Given an origin, destination, an
 
 <CardGroup cols={3}>
   <Card title="Quickstart" icon="bolt" href="/planner/quickstart">
-    Submit a route and get an optimized charging plan.
+    Get started with your first route optimization.
   </Card>
   <Card title="Vehicles" icon="truck" href="/planner/vehicles">
     Look up the Vehicle ID required for every planner request.
@@ -38,7 +38,7 @@ The API is asynchronous. Submit a request, then poll for the result.
   <Step title="Check progress">
     Poll [`GET /planner/jobs/{job_id}`](/api-reference/planner/get-job-status) to check whether the optimization has completed.
   </Step>
-  <Step title="Get your charging plan">
+  <Step title="Get your optimized route">
     Retrieve the result from [`GET /planner/optimizations/{optimization_id}/result`](/api-reference/planner/get-optimization-result).
   </Step>
 </Steps>

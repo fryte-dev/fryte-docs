@@ -40,7 +40,7 @@ The API starts optimizing in the background and returns identifiers to track the
 }
 ```
 
-## 2. Poll for completion
+## 2. Check progress
 
 Poll with your `job_id` until `status` is `succeeded`.
 
@@ -59,7 +59,7 @@ curl "https://api.fryte.eu/planner/jobs/<job_id>" \
 }
 ```
 
-## 3. Get your charging plan
+## 3. Get your optimized route
 
 ```bash
 curl "https://api.fryte.eu/planner/optimizations/7716/result" \
