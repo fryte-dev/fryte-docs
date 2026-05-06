@@ -35,5 +35,6 @@ Validation errors (422) return additional detail about the affected fields:
 | `401` | Unauthorized | Missing or invalid Bearer token |
 | `404` | Not Found | Vehicle or resource not found |
 | `422` | Validation Error | Request body fails schema validation (e.g. battery_level_start out of range) |
+| `429` | Too Many Requests | Rate limit exceeded — see [Limitations](/planner/limitations#rate-limits) |
 | `500` | Internal Error | Server-side issue — contact support |
 | `502` | Bad Gateway | Optimization service temporarily unavailable — retry after a few seconds |
