@@ -5,7 +5,8 @@ description: Munich to Augsburg to Ulm, 2 drops with opening times.
 
 ## Request
 
-```bash
+<CodeGroup>
+```bash curl
 curl -X POST "https://api.fryte.eu/planner/v2?corridor=8000" \
   -H "Authorization: Bearer <your-token>" \
   -H "Content-Type: application/json" \
@@ -35,6 +36,117 @@ curl -X POST "https://api.fryte.eu/planner/v2?corridor=8000" \
     "start_time_tour": "06:00:00"
   }'
 ```
+```python Python
+import requests
+
+response = requests.post(
+    "https://api.fryte.eu/planner/v2",
+    params={"corridor": 8000},
+    headers={"Authorization": "Bearer <your-token>"},
+    json={
+        "vehicle_id": "010160700001",
+        "battery_level_start": 0.8,
+        "section_list": [
+            {
+                "section_id": "muenchen-augsburg",
+                "start_pos": [48.1351, 11.5820],
+                "stop_pos": [48.3705, 10.8978],
+                "payload_kg": 19300,
+                "opening_time": ["09:00:00", "12:00:00"],
+            },
+            {
+                "section_id": "augsburg-ulm",
+                "start_pos": [48.3705, 10.8978],
+                "stop_pos": [48.4011, 9.9876],
+                "payload_kg": 12000,
+                "opening_time": ["13:00:00", "17:00:00"],
+            },
+        ],
+        "poi_info": {
+            "min_kW": 150,
+            "connector_type": ["CCS"],
+        },
+        "start_time_tour": "06:00:00",
+    },
+)
+print(response.json())
+```
+```javascript JavaScript
+const response = await fetch("https://api.fryte.eu/planner/v2?corridor=8000", {
+  method: "POST",
+  headers: {
+    "Authorization": "Bearer <your-token>",
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    vehicle_id: "010160700001",
+    battery_level_start: 0.8,
+    section_list: [
+      {
+        section_id: "muenchen-augsburg",
+        start_pos: [48.1351, 11.5820],
+        stop_pos: [48.3705, 10.8978],
+        payload_kg: 19300,
+        opening_time: ["09:00:00", "12:00:00"],
+      },
+      {
+        section_id: "augsburg-ulm",
+        start_pos: [48.3705, 10.8978],
+        stop_pos: [48.4011, 9.9876],
+        payload_kg: 12000,
+        opening_time: ["13:00:00", "17:00:00"],
+      },
+    ],
+    poi_info: {
+      min_kW: 150,
+      connector_type: ["CCS"],
+    },
+    start_time_tour: "06:00:00",
+  }),
+});
+const data = await response.json();
+console.log(data);
+```
+```csharp C#
+using var client = new HttpClient();
+client.DefaultRequestHeaders.Add("Authorization", "Bearer <your-token>");
+
+var json = """
+{
+    "vehicle_id": "010160700001",
+    "battery_level_start": 0.8,
+    "section_list": [
+        {
+            "section_id": "muenchen-augsburg",
+            "start_pos": [48.1351, 11.5820],
+            "stop_pos": [48.3705, 10.8978],
+            "payload_kg": 19300,
+            "opening_time": ["09:00:00", "12:00:00"]
+        },
+        {
+            "section_id": "augsburg-ulm",
+            "start_pos": [48.3705, 10.8978],
+            "stop_pos": [48.4011, 9.9876],
+            "payload_kg": 12000,
+            "opening_time": ["13:00:00", "17:00:00"]
+        }
+    ],
+    "poi_info": {
+        "min_kW": 150,
+        "connector_type": ["CCS"]
+    },
+    "start_time_tour": "06:00:00"
+}
+""";
+
+var response = await client.PostAsync(
+    "https://api.fryte.eu/planner/v2?corridor=8000",
+    new StringContent(json, System.Text.Encoding.UTF8, "application/json")
+);
+var result = await response.Content.ReadAsStringAsync();
+Console.WriteLine(result);
+```
+</CodeGroup>
 
 ## Response
 

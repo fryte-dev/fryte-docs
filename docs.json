@@ -59,6 +59,11 @@
       "href": "/#authentication"
     }
   },
+  "api": {
+    "examples": {
+      "languages": ["bash", "python", "javascript", "typescript", "csharp", "php", "java", "go", "kotlin"]
+    }
+  },
   "contextual": {
     "options": ["copy"]
   },
