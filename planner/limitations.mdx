@@ -4,7 +4,7 @@ description: Current constraints and known limitations of the Planner API.
 ---
 ## General
 
-Each request optimizes charging for a single route. The road-level route is calculated by HERE — the API itself does not generate or compare alternative routes. Battery levels must be between 0.1 and 1.0 at departure and 0.1 and 0.8 at arrival. Charging stations are searched within a corridor of 1–20 km around the route (default 8 km).
+Each request optimizes charging for a single route. You can either provide start/stop coordinates — in which case HERE calculates one road-level route — or supply your own flexpolyline to optimize charging along a pre-defined path. In both cases the API works with exactly one route per request and does not generate or compare alternatives. Battery levels must be between 0.1 and 1.0 at departure and 0.1 and 0.8 at arrival. Charging stations are searched within a corridor of 1–20 km around the route (default 8 km).
 
 ## Rate Limits
 
