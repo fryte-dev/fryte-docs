@@ -5,7 +5,9 @@ description: Current constraints and known limitations of the Planner API.
 ## General
 
 **Single Route Only:** The API evaluates exactly one route per request and does not generate or compare alternatives. This applies whether you pass start/stop coordinates for automatic routing or provide a custom flexpolyline.
+
 **Battery Constraints:** State of Charge (SoC) must be 0.1–1.0 at departure and 0.1–0.8 at arrival.
+
 **Search Corridor:** Station searches are restricted to a 1–20 km radius around the route (default: 8 km).
 
 ## Rate Limits
