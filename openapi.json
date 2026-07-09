@@ -5,88 +5,6 @@
     "version": "2.0.0"
   },
   "paths": {
-    "/planner": {
-      "post": {
-        "tags": [
-          "planner"
-        ],
-        "summary": "Plan Tour",
-        "description": "Plan a tour by performing routing, retrieving vehicle and POI data, running a simulation, computing toll totals, and returning an assembled PlannerResponse.\n\nPerforms routing using either a provided flexpolyline or start/stop positions, augments route data with the planner request, fetches vehicle information, obtains POIs along the route (optionally via the eco-movement feature), invokes the simulation service, computes a toll summary from the route, and returns the final PlannerResponse.\n\nReturns:\n    PlannerResponse: Response containing vehicle_id, battery_level_start, battery_level_end, sections, poi_list, optimal_departure_time, time_windows_reachable, toll_summary, and other planner metadata.\n\nRaises:\n    HTTPException: If the request is invalid or if any downstream service call (routing, vehicle info, POI retrieval, or simulation) fails.",
-        "operationId": "plan_tour_planner_post",
-        "security": [
-          {
-            "HybridAuthBearer": []
-          },
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "corridor",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "maximum": 20000,
-              "minimum": 1000,
-              "default": 8000,
-              "title": "Corridor"
-            }
-          },
-          {
-            "name": "tenant_id",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "integer"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Tenant ID",
-              "title": "Tenant Id"
-            },
-            "description": "Tenant ID"
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/PlannerRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PlannerResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/planner/v2": {
       "post": {
         "tags": [
@@ -126,11 +44,11 @@
               "type": "integer",
               "maximum": 100,
               "minimum": 0,
-              "description": "Minimum charging session duration in minutes. Charging stops shorter than this are removed from the optimizer's decision space, so planned sessions are either 0 or at least this long. Applies to pure charging time (excluding the connecting/parking overhead shown in service_time_min). 0 disables the floor (default).",
+              "description": "Minimum charging session duration in minutes enforced by the optimizer's charge planning (pure charging time, excluding connecting/parking overhead). 0 disables the floor.",
               "default": 0,
               "title": "Min Charge Duration Min"
             },
-            "description": "Minimum charging session duration in minutes. Charging stops shorter than this are removed from the optimizer's decision space, so planned sessions are either 0 or at least this long. Applies to pure charging time (excluding the connecting/parking overhead shown in service_time_min). 0 disables the floor (default)."
+            "description": "Minimum charging session duration in minutes enforced by the optimizer's charge planning (pure charging time, excluding connecting/parking overhead). 0 disables the floor."
           },
           {
             "name": "tenant_id",
@@ -171,6 +89,18 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Invalid start_time_tour or missing tenant context."
+          },
+          "401": {
+            "description": "Missing or invalid authentication."
+          },
+          "429": {
+            "description": "Rate limit exceeded."
+          },
+          "502": {
+            "description": "Tour creation or optimizer submission failed."
           },
           "422": {
             "description": "Validation Error",
@@ -243,6 +173,18 @@
               }
             }
           },
+          "401": {
+            "description": "Missing or invalid authentication."
+          },
+          "404": {
+            "description": "Job not found."
+          },
+          "429": {
+            "description": "Rate limit exceeded."
+          },
+          "502": {
+            "description": "Optimizer service unavailable or returned an invalid response."
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -262,7 +204,7 @@
           "planner"
         ],
         "summary": "List jobs",
-        "description": "List all optimization jobs for a given user. Returns job summaries with status, timestamps, and identifiers.",
+        "description": "List the authenticated user's optimization jobs. Returns job summaries with status, timestamps, and identifiers.",
         "operationId": "list_jobs_planner_jobs_get",
         "security": [
           {
@@ -276,13 +218,20 @@
           {
             "name": "user_id",
             "in": "query",
-            "required": true,
+            "required": false,
             "schema": {
-              "type": "integer",
-              "description": "User ID to list jobs for",
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Deprecated. If provided, must match the authenticated user's ID; jobs are always listed for the authenticated user.",
               "title": "User Id"
             },
-            "description": "User ID to list jobs for"
+            "description": "Deprecated. If provided, must match the authenticated user's ID; jobs are always listed for the authenticated user."
           },
           {
             "name": "tenant_id",
@@ -318,6 +267,18 @@
               }
             }
           },
+          "401": {
+            "description": "Missing or invalid authentication."
+          },
+          "403": {
+            "description": "user_id does not match the authenticated user."
+          },
+          "429": {
+            "description": "Rate limit exceeded."
+          },
+          "502": {
+            "description": "Optimizer service unavailable or returned an invalid response."
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -337,7 +298,7 @@
           "planner"
         ],
         "summary": "Get optimization result",
-        "description": "Retrieve the optimization result for a completed job.\n\nCall this endpoint once `GET /planner/jobs/{job_id}` returns status `succeeded` or `not_drivable`.\n\nA `succeeded` result contains route `sections` with charging stop details (`poi_summary`) and candidate charging stations (`poi_list`). If the route includes toll roads, a `toll_summary` is included. When status is `not_drivable`, the `not_drivable_reason` field explains why the route is not feasible.",
+        "description": "Retrieve the optimization result for a completed job.\n\nCall this endpoint once `GET /planner/jobs/{job_id}` returns status `succeeded` or `not_drivable`.\n\nA `succeeded` result contains route `sections` with charging stop details (`poi_summary`) and candidate charging stations (`poi_list`). When status is `not_drivable`, the `not_drivable_reason` field explains why the route is not feasible.",
         "operationId": "get_optimization_result_planner_optimizations__optimization_id__result_get",
         "security": [
           {
@@ -389,6 +350,21 @@
               }
             }
           },
+          "401": {
+            "description": "Missing or invalid authentication."
+          },
+          "404": {
+            "description": "Optimization not found."
+          },
+          "409": {
+            "description": "Optimization result is not available yet."
+          },
+          "429": {
+            "description": "Rate limit exceeded."
+          },
+          "502": {
+            "description": "Optimizer service unavailable or returned an invalid response."
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -405,6 +381,22 @@
   },
   "components": {
     "schemas": {
+      "ConnectorPos": {
+        "type": "string",
+        "enum": [
+          "LEFT",
+          "RIGHT"
+        ],
+        "title": "ConnectorPos"
+      },
+      "ConnectorType": {
+        "type": "string",
+        "enum": [
+          "MCS",
+          "CCS"
+        ],
+        "title": "ConnectorType"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -432,18 +424,19 @@
           },
           "date_created": {
             "type": "string",
+            "format": "date-time",
             "title": "Date Created",
             "description": "Timestamp when the job was created (ISO-8601)."
           },
           "last_update": {
             "type": "string",
+            "format": "date-time",
             "title": "Last Update",
             "description": "Timestamp of the last status update (ISO-8601)."
           },
           "status": {
-            "type": "string",
-            "title": "Status",
-            "description": "Job status: queued, running, succeeded, not_drivable, failed, canceled."
+            "$ref": "#/components/schemas/OptimizationJobStatus",
+            "description": "Current job status."
           }
         },
         "type": "object",
@@ -455,6 +448,7 @@
           "status"
         ],
         "title": "JobListResponse",
+        "description": "A job summary in GET /planner/jobs, mirroring the optimizer's summary schema.",
         "example": {
           "date_created": "2026-04-30T08:00:00Z",
           "job_id": "c3f1c944-a44c-4c07-ab52-7df7ba94024a",
@@ -483,9 +477,8 @@
             "description": "Optimization identifier."
           },
           "status": {
-            "type": "string",
-            "title": "Status",
-            "description": "Job status: queued, running, succeeded, not_drivable, failed, canceled."
+            "$ref": "#/components/schemas/OptimizationJobStatus",
+            "description": "Current job status."
           },
           "tour_id": {
             "type": "integer",
@@ -512,6 +505,7 @@
           "tour_id"
         ],
         "title": "JobStatusResponse",
+        "description": "Response body for GET /planner/jobs/{job_id}, mirroring the optimizer's job schema.",
         "example": {
           "job_id": "c3f1c944-a44c-4c07-ab52-7df7ba94024a",
           "optimization_id": 7658,
@@ -552,6 +546,19 @@
         "title": "NotDrivableReason",
         "description": "Reason returned when the optimizer determines a route is not drivable."
       },
+      "OptimizationJobStatus": {
+        "type": "string",
+        "enum": [
+          "queued",
+          "running",
+          "succeeded",
+          "not_drivable",
+          "failed",
+          "canceled"
+        ],
+        "title": "OptimizationJobStatus",
+        "description": "Lifecycle status of an optimization job."
+      },
       "OptimizationResultResponse": {
         "properties": {
           "optimization_id": {
@@ -565,9 +572,8 @@
             "description": "Tour identifier."
           },
           "status": {
-            "type": "string",
-            "title": "Status",
-            "description": "Job lifecycle status: succeeded or not_drivable."
+            "$ref": "#/components/schemas/OptimizationJobStatus",
+            "description": "Job lifecycle status; a result is available for succeeded or not_drivable."
           },
           "battery_level_start": {
             "type": "number",
@@ -603,7 +609,7 @@
           "poi_filter": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/api__features__poi__schemas__POIInfo"
+                "$ref": "#/components/schemas/POIInfo"
               },
               {
                 "type": "null"
@@ -648,7 +654,7 @@
               }
             ],
             "title": "Available Charging Stations",
-            "description": "All charging stations found within the route corridor. Only included when include_available_charging_stations is true."
+            "description": "All charging stations found within the route corridor, before the optimizer narrowed them down to the selected stops. Null for results created before this field was introduced."
           },
           "not_drivable_reason": {
             "anyOf": [
@@ -660,23 +666,9 @@
               }
             ],
             "description": "Reason why the route is not drivable."
-          },
-          "toll_summary": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/TollSummary"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Toll Summary",
-            "description": "Toll costs aggregated per toll system."
           }
         },
+        "additionalProperties": true,
         "type": "object",
         "required": [
           "optimization_id",
@@ -689,6 +681,7 @@
           "poi_list"
         ],
         "title": "OptimizationResultResponse",
+        "description": "Response body for GET /planner/optimizations/{optimization_id}/result.",
         "example": {
           "battery_level_end": 0.41,
           "battery_level_start": 0.8,
@@ -727,15 +720,102 @@
             }
           ],
           "status": "succeeded",
-          "toll_summary": [
-            {
-              "currency": "EUR",
-              "tollSystem": "TOLL COLLECT GMBH",
-              "total": 81.41
-            }
-          ],
           "tour_id": 7615
         }
+      },
+      "POIInfo": {
+        "properties": {
+          "min_kW": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min Kw",
+            "description": "Minimum required power (in kW) for a charging station."
+          },
+          "max_kW": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Kw",
+            "description": "Maximum acceptable power (in kW) for a charging station."
+          },
+          "cpo": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cpo",
+            "description": "A list of Charge Point Operators (CPO) to filter by."
+          },
+          "truck_approved": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TruckApproved"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Truck-ready stations: T (tractor-only) or TT (truck and trailer). TT is a subset of T."
+          },
+          "connector_type": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/ConnectorType"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Connector Type",
+            "description": "List of connector types (e.g., CCS, MCS)."
+          },
+          "connector_pos": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ConnectorPos"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Position of the connector on the vehicle (e.g., LEFT, RIGHT)."
+          },
+          "bookable": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bookable",
+            "description": "Only return bookable charging stations."
+          }
+        },
+        "type": "object",
+        "title": "POIInfo"
       },
       "PlannerRequest": {
         "properties": {
@@ -771,11 +851,12 @@
               "$ref": "#/components/schemas/SectionRequest"
             },
             "type": "array",
+            "minItems": 1,
             "title": "Section List",
             "description": "A list of route sections to be processed."
           },
           "poi_info": {
-            "$ref": "#/components/schemas/api__features__poi__schemas__POIInfo",
+            "$ref": "#/components/schemas/POIInfo",
             "description": "Filter criteria for charging stations along the route."
           },
           "service_time_departure_min": {
@@ -801,12 +882,12 @@
               }
             ],
             "title": "Start Time Tour",
-            "description": "Start time of the tour in HH:MM:SS or ISO-8601 format."
+            "description": "Start time of the tour in HH:MM:SS or ISO-8601 format. A time-only value is interpreted as today's date in UTC."
           },
           "include_available_charging_stations": {
             "type": "boolean",
             "title": "Include Available Charging Stations",
-            "description": "When true, the response includes all charging stations along the corridor.",
+            "description": "Legacy POST /planner (v1) only: when true, the synchronous response includes all charging stations along the corridor. POST /planner/v2 results always include available_charging_stations.",
             "default": false
           }
         },
@@ -818,7 +899,7 @@
           "poi_info"
         ],
         "title": "PlannerRequest",
-        "description": "Top-level request body schema for the planner.",
+        "description": "Top-level request body for POST /planner and POST /planner/v2.",
         "example": {
           "battery_level_end": 0.2,
           "battery_level_start": 0.8,
@@ -848,10 +929,6 @@
           "start_time_tour": "08:00:00",
           "vehicle_id": "010160700001"
         }
-      },
-      "PlannerResponse": {
-        "additionalProperties": true,
-        "type": "object"
       },
       "PlannerV2SubmitResponse": {
         "properties": {
@@ -911,6 +988,7 @@
           "tour_id"
         ],
         "title": "PlannerV2SubmitResponse",
+        "description": "Response body for POST /planner/v2.",
         "example": {
           "job_id": "c3f1c944-a44c-4c07-ab52-7df7ba94024a",
           "message": "202 - Job submitted.",
@@ -1484,6 +1562,9 @@
           "arrival_time": {
             "anyOf": [
               {
+                "type": "number"
+              },
+              {
                 "type": "string"
               },
               {
@@ -1491,7 +1572,7 @@
               }
             ],
             "title": "Arrival Time",
-            "description": "Arrival time at this stop (ISO-8601, e.g. 2026-05-04T17:23:01Z)."
+            "description": "Arrival time at this stop (ISO-8601)."
           },
           "additional_stops": {
             "anyOf": [
@@ -1729,38 +1810,6 @@
             "title": "Power Available Kw",
             "description": "Charging power at the section end in kW."
           },
-          "turnByTurnActions": {
-            "anyOf": [
-              {
-                "items": {
-                  "additionalProperties": true,
-                  "type": "object"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Turnbyturnactions",
-            "description": "Turn-by-turn navigation instructions from the HERE Routing API."
-          },
-          "tolls": {
-            "anyOf": [
-              {
-                "items": {
-                  "additionalProperties": true,
-                  "type": "object"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Tolls",
-            "description": "Toll data for this section from the HERE Routing API."
-          },
           "poi_summary": {
             "anyOf": [
               {
@@ -1808,11 +1857,10 @@
             "anyOf": [
               {
                 "items": {
-                  "type": "number",
-                  "maximum": 180.0,
-                  "minimum": -180.0
+                  "type": "number"
                 },
                 "type": "array",
+                "maxItems": 2,
                 "minItems": 2
               },
               {
@@ -1826,11 +1874,10 @@
             "anyOf": [
               {
                 "items": {
-                  "type": "number",
-                  "maximum": 180.0,
-                  "minimum": -180.0
+                  "type": "number"
                 },
                 "type": "array",
+                "maxItems": 2,
                 "minItems": 2
               },
               {
@@ -1899,47 +1946,13 @@
         "title": "SectionRequest",
         "description": "Fields for each section in the *request*."
       },
-      "TollSummary": {
-        "properties": {
-          "tollSystem": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Tollsystem",
-            "description": "Name of the toll system."
-          },
-          "currency": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Currency",
-            "description": "Currency code (e.g. EUR)."
-          },
-          "total": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Total",
-            "description": "Total toll cost."
-          }
-        },
-        "type": "object",
-        "title": "TollSummary"
+      "TruckApproved": {
+        "type": "string",
+        "enum": [
+          "T",
+          "TT"
+        ],
+        "title": "TruckApproved"
       },
       "ValidationError": {
         "properties": {
@@ -1964,6 +1977,13 @@
           "type": {
             "type": "string",
             "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
           }
         },
         "type": "object",
@@ -1973,124 +1993,6 @@
           "type"
         ],
         "title": "ValidationError"
-      },
-      "api__features__poi__schemas__ConnectorPos": {
-        "type": "string",
-        "enum": [
-          "LEFT",
-          "RIGHT"
-        ],
-        "title": "ConnectorPos"
-      },
-      "api__features__poi__schemas__ConnectorType": {
-        "type": "string",
-        "enum": [
-          "MCS",
-          "CCS"
-        ],
-        "title": "ConnectorType"
-      },
-      "api__features__poi__schemas__POIInfo": {
-        "properties": {
-          "min_kW": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Min Kw",
-            "description": "Minimum required power (in kW) for a charging station."
-          },
-          "max_kW": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Max Kw",
-            "description": "Maximum acceptable power (in kW) for a charging station."
-          },
-          "cpo": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "string"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Cpo",
-            "description": "A list of Charge Point Operators (CPO) to filter by."
-          },
-          "truck_approved": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/api__features__poi__schemas__TruckApproved"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "Truck-ready stations: T (tractor-only) or TT (truck and trailer; subset of T). Strongly recommended for every truck request \u2014 without it, stations that are not truck-accessible (e.g. urban car chargers) are considered."
-          },
-          "connector_type": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/api__features__poi__schemas__ConnectorType"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Connector Type",
-            "description": "List of connector types (e.g., CCS, MCS)."
-          },
-          "connector_pos": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/api__features__poi__schemas__ConnectorPos"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "Position of the connector on the vehicle (e.g., LEFT, RIGHT)."
-          },
-          "bookable": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Bookable",
-            "description": "Only return bookable charging stations."
-          }
-        },
-        "type": "object",
-        "title": "POIInfo"
-      },
-      "api__features__poi__schemas__TruckApproved": {
-        "type": "string",
-        "enum": [
-          "T",
-          "TT"
-        ],
-        "title": "TruckApproved"
       }
     },
     "securitySchemes": {
