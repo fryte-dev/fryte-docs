@@ -2040,7 +2040,7 @@
                 "type": "null"
               }
             ],
-            "description": "Truck-ready stations: T (tractor-only) or TT (truck and trailer). TT is a subset of T."
+            "description": "Truck-ready stations: T (tractor-only) or TT (truck and trailer; subset of T). Strongly recommended for every truck request \u2014 without it, stations that are not truck-accessible (e.g. urban car chargers) are considered."
           },
           "connector_type": {
             "anyOf": [
@@ -2106,7 +2106,7 @@
   },
   "servers": [
     {
-      "url": "https://api.fryte.eu"
+      "url": "https://api.fryte.com"
     }
   ]
 }

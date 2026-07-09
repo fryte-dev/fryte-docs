@@ -8,7 +8,9 @@ description: Current constraints and known limitations of the Planner API.
 
 **Battery Constraints:** State of Charge (SoC) must be 0.1–1.0 at departure and 0.1–0.8 at arrival.
 
-**Search Corridor:** Station searches are restricted to a 1–20 km radius around the route (default: 8 km).
+**Search Corridor:** Station searches are restricted to a 1–20 km radius around the route (default: 8 km) — see [Search Corridor](/planner/examples/search-corridor).
+
+**Truck accessibility:** The station database contains chargers of all kinds. Only stations flagged `truck_approved` (`T` / `TT`) are verified for truck access — [always set this filter](/planner/examples/search-corridor#always-set-the-truck-ready-filter) for truck requests.
 
 ## Charging stops
 

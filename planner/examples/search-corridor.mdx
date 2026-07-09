@@ -1,0 +1,180 @@
+---
+title: Search Corridor
+description: How the corridor width changes which stations the optimizer can choose from.
+---
+
+The `corridor` query parameter (1000–20000 meters, default `8000`) controls how far off the
+route the optimizer looks for charging stations. Every station within that distance is a
+candidate; everything outside is invisible to the optimizer. A wider corridor means more
+candidates — often better chargers — at the cost of potentially longer detours and, for very
+wide corridors, driving-time estimates that are harder to guarantee.
+
+The same Amsterdam → Bremen request with `corridor=1000` and `corridor=20000`:
+
+<Frame caption="Candidate stations for the same route and station filter at 1 km vs. 20 km corridor width. Data from two real optimization runs.">
+  <img src="/images/planner/corridor-comparison.png" alt="Two maps of the Amsterdam to Bremen route. Left: corridor 1000 m with 88 candidate stations hugging the route. Right: corridor 20000 m with 327 candidate stations spread in a wide band, including clusters around cities." />
+</Frame>
+
+## Request
+
+<CodeGroup>
+```bash curl
+curl -X POST "https://api.fryte.com/planner/v2?corridor=20000" \
+  -H "Authorization: Bearer <your-token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "vehicle_id": "010160700001",
+    "battery_level_start": 0.7,
+    "section_list": [
+      {
+        "start_pos": [52.3700, 4.9000],
+        "stop_pos": [53.0800, 8.8100],
+        "payload_kg": 19300
+      }
+    ],
+    "poi_info": {
+      "min_kW": 150,
+      "connector_type": ["CCS"],
+      "truck_approved": "TT"
+    }
+  }'
+```
+```python Python
+import requests
+
+response = requests.post(
+    "https://api.fryte.com/planner/v2",
+    params={"corridor": 20000},
+    headers={"Authorization": "Bearer <your-token>"},
+    json={
+        "vehicle_id": "010160700001",
+        "battery_level_start": 0.7,
+        "section_list": [
+            {
+                "start_pos": [52.3700, 4.9000],
+                "stop_pos": [53.0800, 8.8100],
+                "payload_kg": 19300,
+            }
+        ],
+        "poi_info": {
+            "min_kW": 150,
+            "connector_type": ["CCS"],
+            "truck_approved": "TT",
+        },
+    },
+)
+print(response.json())
+```
+```javascript JavaScript
+const response = await fetch("https://api.fryte.com/planner/v2?corridor=20000", {
+  method: "POST",
+  headers: {
+    "Authorization": "Bearer <your-token>",
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    vehicle_id: "010160700001",
+    battery_level_start: 0.7,
+    section_list: [
+      {
+        start_pos: [52.3700, 4.9000],
+        stop_pos: [53.0800, 8.8100],
+        payload_kg: 19300,
+      },
+    ],
+    poi_info: {
+      min_kW: 150,
+      connector_type: ["CCS"],
+      truck_approved: "TT",
+    },
+  }),
+});
+const data = await response.json();
+console.log(data);
+```
+```csharp C#
+using var client = new HttpClient();
+client.DefaultRequestHeaders.Add("Authorization", "Bearer <your-token>");
+
+var json = """
+{
+    "vehicle_id": "010160700001",
+    "battery_level_start": 0.7,
+    "section_list": [
+        {
+            "start_pos": [52.3700, 4.9000],
+            "stop_pos": [53.0800, 8.8100],
+            "payload_kg": 19300
+        }
+    ],
+    "poi_info": {
+        "min_kW": 150,
+        "connector_type": ["CCS"],
+        "truck_approved": "TT"
+    }
+}
+""";
+
+var response = await client.PostAsync(
+    "https://api.fryte.com/planner/v2?corridor=20000",
+    new StringContent(json, System.Text.Encoding.UTF8, "application/json")
+);
+var result = await response.Content.ReadAsStringAsync();
+Console.WriteLine(result);
+```
+</CodeGroup>
+
+## What changed between 1 km and 20 km
+
+In the comparison runs behind the figure, both plans stop once — during the driver's mandatory
+45-minute rest — and both arrive in Bremen at practically the same time. The difference is what
+that stop is worth:
+
+| | `corridor=1000` | `corridor=20000` |
+|---|---|---|
+| Candidate stations | 88 | 327 |
+| Chosen stop | Tango electric, Rijksweg A1 | Fastned, De paal |
+| Energy recharged in the 45-min rest | 40.5 kWh | **90 kWh** |
+| Battery at destination | 31% | **40%** |
+| Arrival time | 12:45 | 12:45 |
+
+The wider corridor did not make the tour faster here — it made the *same rest stop* recharge
+twice the energy, so the truck arrives with 9 percentage points more battery for the next leg.
+
+<Note>
+Responses to requests with a non-default corridor include a warning: with a very wide corridor,
+detours to far-away stations make the driving-time calculation harder to guarantee. Treat
+`8000` as the sensible default and widen it when station coverage on the route is thin.
+</Note>
+
+## Always set the truck-ready filter
+
+A wider corridor surfaces more stations — including urban chargers a 40-ton truck cannot
+physically use (access, turning radius, parking bay length). The optimizer only checks power and
+connector unless you tell it otherwise: **set `poi_info.truck_approved` as the starting point of
+every truck request.**
+
+- `"T"` — verified accessible for a tractor unit
+- `"TT"` — verified accessible for a truck with trailer (subset of `T`)
+
+The same Amsterdam → Groningen request with and without the filter:
+
+<Frame caption="Without the filter the optimizer picks a charger on an industrial street near Almere; with truck_approved=T it picks a truck-capable highway rest area — and arrives earlier, because the truck-ready site charges at 400 kW.">
+  <img src="/images/planner/truck-ready-comparison.png" alt="Two maps of the Amsterdam to Groningen route. Left: without the truck filter, 75 candidate stations including inner-city clusters; the chosen stop is an urban charger on an industrial street. Right: with truck_approved T, 12 candidates along the highway; the chosen stop is a Fastned A6 rest area." />
+</Frame>
+
+```json
+"poi_info": {
+  "min_kW": 150,
+  "connector_type": ["CCS"],
+  "truck_approved": "T"
+}
+```
+
+<Warning>
+Without `truck_approved`, plans can route trucks to stations that are not truck-accessible —
+this has happened in production with inner-city chargers around Amsterdam. If setting the filter
+returns `not_drivable` or very few candidates, the region may lack verified truck stations:
+widen the corridor, try `"T"` instead of `"TT"`, or contact FRYTE about coverage — do not drop
+the filter for a truck.
+</Warning>

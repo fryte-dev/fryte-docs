@@ -3,11 +3,20 @@ title: Charging Stops
 description: Berlin to Frankfurt, 546 km, 2 charging stops.
 ---
 
+The most common planner scenario: a route longer than one battery charge. You submit a single
+section from A to B, and the optimizer decides **where** to charge, **for how long**, and
+**to which state of charge** — trading off charging speed (charging is fastest at low SoC),
+detours, and mandatory driver rest so that total tour time is minimal.
+
+This example plans Berlin → Frankfurt (546 km) for a truck starting at 80% battery. The request
+needs only the route, the payload, and a station filter (`poi_info`); everything about charging
+is decided by the optimizer.
+
 ## Request
 
 <CodeGroup>
 ```bash curl
-curl -X POST "https://api.fryte.eu/planner/v2?corridor=8000" \
+curl -X POST "https://api.fryte.com/planner/v2?corridor=8000" \
   -H "Authorization: Bearer <your-token>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -30,7 +39,7 @@ curl -X POST "https://api.fryte.eu/planner/v2?corridor=8000" \
 import requests
 
 response = requests.post(
-    "https://api.fryte.eu/planner/v2",
+    "https://api.fryte.com/planner/v2",
     params={"corridor": 8000},
     headers={"Authorization": "Bearer <your-token>"},
     json={
@@ -52,7 +61,7 @@ response = requests.post(
 print(response.json())
 ```
 ```javascript JavaScript
-const response = await fetch("https://api.fryte.eu/planner/v2?corridor=8000", {
+const response = await fetch("https://api.fryte.com/planner/v2?corridor=8000", {
   method: "POST",
   headers: {
     "Authorization": "Bearer <your-token>",
@@ -100,7 +109,7 @@ var json = """
 """;
 
 var response = await client.PostAsync(
-    "https://api.fryte.eu/planner/v2?corridor=8000",
+    "https://api.fryte.com/planner/v2?corridor=8000",
     new StringContent(json, System.Text.Encoding.UTF8, "application/json")
 );
 var result = await response.Content.ReadAsStringAsync();
@@ -175,6 +184,21 @@ Console.WriteLine(result);
 }
 ```
 
+## What the optimizer did
+
+The optimizer inserted 3 charging stops, splitting the single input section into 4 response
+sections. Each section ends at a stop described by its `poi_summary`:
+
+- `charge_time_min` is the pure charging time; `service_time_min` additionally contains the
+  connecting and parking overhead — the difference is the fixed per-stop overhead.
+- `start_soc` / `stop_soc` are the battery levels when arriving at and leaving the stop. The
+  truck arrives at the first charger at 30%, charges to 60%, and reaches Frankfurt with 21%.
+- `alternatives` lists nearby stations you can swap in manually; `additional_stops` indicates
+  that alternatives exist.
+- The third coordinate of `start_pos` / `stop_pos` is the SoC at that point of the route.
+
 <Note>
-The optimizer inserted 2 charging stops, splitting the single section into 4. The truck arrives in Frankfurt with 21% battery.
+Depending on the route, the time-optimal plan can contain very short top-up stops. If those are
+operationally undesirable for your fleet, set a floor with
+[`min_charge_duration_min`](/planner/examples/minimum-charge-duration).
 </Note>
