@@ -33,7 +33,8 @@ curl -X POST "https://api.fryte.com/planner/v2" \
     ],
     "poi_info": {
       "min_kW": 150,
-      "connector_type": ["CCS"]
+      "connector_type": ["CCS"],
+      "truck_approved": "TT"
     }
   }'
 ```
@@ -56,6 +57,7 @@ response = requests.post(
         "poi_info": {
             "min_kW": 150,
             "connector_type": ["CCS"],
+            "truck_approved": "TT",
         },
     },
 )
@@ -81,6 +83,7 @@ const response = await fetch("https://api.fryte.com/planner/v2", {
     poi_info: {
       min_kW: 150,
       connector_type: ["CCS"],
+      truck_approved: "TT",
     },
   }),
 });
@@ -104,7 +107,8 @@ var json = """
     ],
     "poi_info": {
         "min_kW": 150,
-        "connector_type": ["CCS"]
+        "connector_type": ["CCS"],
+        "truck_approved": "TT"
     }
 }
 """;
