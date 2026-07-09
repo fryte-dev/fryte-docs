@@ -9,6 +9,13 @@ description: Plan a Stuttgart → Berlin trip and find where the truck needs to 
 You need an [API key](/#authentication) and a [Vehicle ID](/planner/vehicles).
 </Info>
 
+<Warning>
+For truck routing, always set `poi_info.truck_approved` (`"T"` or `"TT"`). Without it the
+optimizer considers every charger that matches power and connector — including urban stations a
+truck cannot physically access. See
+[Always set the truck-ready filter](/planner/examples/search-corridor#always-set-the-truck-ready-filter).
+</Warning>
+
 <CodeGroup>
 ```bash curl
 curl -X POST "https://api.fryte.eu/planner/v2" \
