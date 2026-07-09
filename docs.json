@@ -29,7 +29,8 @@
             "pages": [
               "planner/examples/intermediate-stops",
               "planner/examples/multiday-tour",
-              "planner/examples/time-windows"
+              "planner/examples/time-windows",
+              "planner/examples/minimum-charge-duration"
             ]
           },
           {

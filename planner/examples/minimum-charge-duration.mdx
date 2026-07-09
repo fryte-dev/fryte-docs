@@ -1,0 +1,187 @@
+---
+title: Minimum Charging Duration
+description: Suppress short top-up stops by setting a floor on charging session length.
+---
+
+The optimizer minimizes total tour time. Because charging is fastest at a low state of charge,
+the time-optimal plan sometimes contains a very short "bridge" charge — a stop of only a few
+minutes that adds just enough energy to reach a faster charger or clear the SoC safety floor.
+
+If short stops are operationally undesirable for your fleet, set `min_charge_duration_min`
+(0–100 minutes, default `0` = no floor). Charging sessions shorter than the floor are removed
+from the optimizer's decision space: every planned charging stop is then at least that long, or
+the energy is shifted to other stops entirely.
+
+## Request
+
+The same request as [Charging Stops](/planner/examples/intermediate-stops), with a 10-minute floor:
+
+<CodeGroup>
+```bash curl
+curl -X POST "https://api.fryte.eu/planner/v2?min_charge_duration_min=10" \
+  -H "Authorization: Bearer <your-token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "vehicle_id": "010160700001",
+    "battery_level_start": 0.5,
+    "section_list": [
+      {
+        "start_pos": [52.0593, 6.1059],
+        "stop_pos": [52.6729, 4.7972],
+        "payload_kg": 19300
+      },
+      {
+        "start_pos": [52.6729, 4.7972],
+        "stop_pos": [52.0593, 6.1059],
+        "payload_kg": 19300
+      }
+    ],
+    "poi_info": {
+      "min_kW": 150,
+      "connector_type": ["CCS"]
+    }
+  }'
+```
+```python Python
+import requests
+
+response = requests.post(
+    "https://api.fryte.eu/planner/v2",
+    params={"min_charge_duration_min": 10},
+    headers={"Authorization": "Bearer <your-token>"},
+    json={
+        "vehicle_id": "010160700001",
+        "battery_level_start": 0.5,
+        "section_list": [
+            {
+                "start_pos": [52.0593, 6.1059],
+                "stop_pos": [52.6729, 4.7972],
+                "payload_kg": 19300,
+            },
+            {
+                "start_pos": [52.6729, 4.7972],
+                "stop_pos": [52.0593, 6.1059],
+                "payload_kg": 19300,
+            },
+        ],
+        "poi_info": {
+            "min_kW": 150,
+            "connector_type": ["CCS"],
+        },
+    },
+)
+print(response.json())
+```
+```javascript JavaScript
+const response = await fetch(
+  "https://api.fryte.eu/planner/v2?min_charge_duration_min=10",
+  {
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer <your-token>",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      vehicle_id: "010160700001",
+      battery_level_start: 0.5,
+      section_list: [
+        {
+          start_pos: [52.0593, 6.1059],
+          stop_pos: [52.6729, 4.7972],
+          payload_kg: 19300,
+        },
+        {
+          start_pos: [52.6729, 4.7972],
+          stop_pos: [52.0593, 6.1059],
+          payload_kg: 19300,
+        },
+      ],
+      poi_info: {
+        min_kW: 150,
+        connector_type: ["CCS"],
+      },
+    }),
+  }
+);
+const data = await response.json();
+console.log(data);
+```
+```csharp C#
+using var client = new HttpClient();
+client.DefaultRequestHeaders.Add("Authorization", "Bearer <your-token>");
+
+var json = """
+{
+    "vehicle_id": "010160700001",
+    "battery_level_start": 0.5,
+    "section_list": [
+        {
+            "start_pos": [52.0593, 6.1059],
+            "stop_pos": [52.6729, 4.7972],
+            "payload_kg": 19300
+        },
+        {
+            "start_pos": [52.6729, 4.7972],
+            "stop_pos": [52.0593, 6.1059],
+            "payload_kg": 19300
+        }
+    ],
+    "poi_info": {
+        "min_kW": 150,
+        "connector_type": ["CCS"]
+    }
+}
+""";
+
+var response = await client.PostAsync(
+    "https://api.fryte.eu/planner/v2?min_charge_duration_min=10",
+    new StringContent(json, System.Text.Encoding.UTF8, "application/json")
+);
+var result = await response.Content.ReadAsStringAsync();
+Console.WriteLine(result);
+```
+</CodeGroup>
+
+## Effect on the plan
+
+Without the floor, the optimizer plans a short top-up on this route:
+
+```json
+{
+  "poi_summary": {
+    "name": "Equans De Vaalt",
+    "power_available_kW": 300.0,
+    "energy_kWh": 36.0,
+    "charge_time_min": 8.0,
+    "service_time_min": 11.0
+  }
+}
+```
+
+With `min_charge_duration_min=10`, the same stop is planned at the floor instead:
+
+```json
+{
+  "poi_summary": {
+    "name": "Equans De Vaalt",
+    "power_available_kW": 300.0,
+    "energy_kWh": 45.0,
+    "charge_time_min": 10.0,
+    "service_time_min": 13.0
+  }
+}
+```
+
+The truck charges slightly longer and arrives with more energy; total tour time increases by at
+most the difference per affected stop. With a high floor the optimizer restructures the plan
+instead — fewer, longer sessions, or the energy moves into other stops.
+
+<Note>
+- The floor applies to **pure charging time**. The reported `service_time_min` additionally
+  contains the connecting and parking overhead.
+- Planning granularity is 2 minutes: odd values round up to the next step (values of 2 or less
+  have no effect).
+- The floor constrains the *planned* session. When the battery reaches the planned target SoC
+  early, the reported session can end sooner.
+- Overnight rest charging is not affected — see [Limitations](/planner/limitations).
+</Note>
