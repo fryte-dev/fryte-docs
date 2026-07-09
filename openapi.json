@@ -2106,7 +2106,7 @@
   },
   "servers": [
     {
-      "url": "https://api.fryte.eu"
+      "url": "https://api.fryte.com"
     }
   ]
 }

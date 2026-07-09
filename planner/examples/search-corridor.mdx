@@ -19,7 +19,7 @@ The same Amsterdam → Bremen request with `corridor=1000` and `corridor=20000`:
 
 <CodeGroup>
 ```bash curl
-curl -X POST "https://api.fryte.eu/planner/v2?corridor=20000" \
+curl -X POST "https://api.fryte.com/planner/v2?corridor=20000" \
   -H "Authorization: Bearer <your-token>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -43,7 +43,7 @@ curl -X POST "https://api.fryte.eu/planner/v2?corridor=20000" \
 import requests
 
 response = requests.post(
-    "https://api.fryte.eu/planner/v2",
+    "https://api.fryte.com/planner/v2",
     params={"corridor": 20000},
     headers={"Authorization": "Bearer <your-token>"},
     json={
@@ -66,7 +66,7 @@ response = requests.post(
 print(response.json())
 ```
 ```javascript JavaScript
-const response = await fetch("https://api.fryte.eu/planner/v2?corridor=20000", {
+const response = await fetch("https://api.fryte.com/planner/v2?corridor=20000", {
   method: "POST",
   headers: {
     "Authorization": "Bearer <your-token>",
@@ -116,7 +116,7 @@ var json = """
 """;
 
 var response = await client.PostAsync(
-    "https://api.fryte.eu/planner/v2?corridor=20000",
+    "https://api.fryte.com/planner/v2?corridor=20000",
     new StringContent(json, System.Text.Encoding.UTF8, "application/json")
 );
 var result = await response.Content.ReadAsStringAsync();

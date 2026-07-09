@@ -17,7 +17,7 @@ Ingolstadt, and a short final leg the next morning. The request is identical to 
 
 <CodeGroup>
 ```bash curl
-curl -X POST "https://api.fryte.eu/planner/v2?corridor=8000" \
+curl -X POST "https://api.fryte.com/planner/v2?corridor=8000" \
   -H "Authorization: Bearer <your-token>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -40,7 +40,7 @@ curl -X POST "https://api.fryte.eu/planner/v2?corridor=8000" \
 import requests
 
 response = requests.post(
-    "https://api.fryte.eu/planner/v2",
+    "https://api.fryte.com/planner/v2",
     params={"corridor": 8000},
     headers={"Authorization": "Bearer <your-token>"},
     json={
@@ -62,7 +62,7 @@ response = requests.post(
 print(response.json())
 ```
 ```javascript JavaScript
-const response = await fetch("https://api.fryte.eu/planner/v2?corridor=8000", {
+const response = await fetch("https://api.fryte.com/planner/v2?corridor=8000", {
   method: "POST",
   headers: {
     "Authorization": "Bearer <your-token>",
@@ -110,7 +110,7 @@ var json = """
 """;
 
 var response = await client.PostAsync(
-    "https://api.fryte.eu/planner/v2?corridor=8000",
+    "https://api.fryte.com/planner/v2?corridor=8000",
     new StringContent(json, System.Text.Encoding.UTF8, "application/json")
 );
 var result = await response.Content.ReadAsStringAsync();
