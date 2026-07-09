@@ -119,6 +119,20 @@
             "description": "Search corridor width in meters around the route for finding charging stations."
           },
           {
+            "name": "min_charge_duration_min",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 0,
+              "description": "Minimum charging session duration in minutes. Charging stops shorter than this are removed from the optimizer's decision space, so planned sessions are either 0 or at least this long. Applies to pure charging time (excluding the connecting/parking overhead shown in service_time_min). 0 disables the floor (default).",
+              "default": 0,
+              "title": "Min Charge Duration Min"
+            },
+            "description": "Minimum charging session duration in minutes. Charging stops shorter than this are removed from the optimizer's decision space, so planned sessions are either 0 or at least this long. Applies to pure charging time (excluding the connecting/parking overhead shown in service_time_min). 0 disables the floor (default)."
+          },
+          {
             "name": "tenant_id",
             "in": "query",
             "required": false,
@@ -1470,9 +1484,6 @@
           "arrival_time": {
             "anyOf": [
               {
-                "type": "number"
-              },
-              {
                 "type": "string"
               },
               {
@@ -1480,7 +1491,7 @@
               }
             ],
             "title": "Arrival Time",
-            "description": "Arrival time at this stop (ISO-8601)."
+            "description": "Arrival time at this stop (ISO-8601, e.g. 2026-05-04T17:23:01Z)."
           },
           "additional_stops": {
             "anyOf": [

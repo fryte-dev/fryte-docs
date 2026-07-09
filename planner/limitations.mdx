@@ -10,6 +10,12 @@ description: Current constraints and known limitations of the Planner API.
 
 **Search Corridor:** Station searches are restricted to a 1–20 km radius around the route (default: 8 km).
 
+## Charging stops
+
+**Short stops by default:** The optimizer minimizes total tour time and may plan short "bridge" charges of only a few minutes when that is time-optimal. Set [`min_charge_duration_min`](/planner/examples/minimum-charge-duration) (0–100 minutes) to enforce a floor on charging session length.
+
+**Overnight charging:** During the mandatory 11-hour overnight rest, `charge_time_min` reports the full overnight stay, not only the effective plugged-in charging time.
+
 ## Rate Limits
 
 Each endpoint allows **120 requests per minute** per client IP. Requests exceeding this limit receive a `429 Too Many Requests` response.
