@@ -3,6 +3,16 @@ title: Multi-Day Tour
 description: Hamburg to Munich, 777 km, overnight stop near Ingolstadt.
 ---
 
+Tours that exceed one legal driving day are planned as multi-day tours automatically — you do
+not set anything in the request. The optimizer respects the driver's limits (9 hours of daily
+driving, 45 minutes of rest after 4.5 hours) and inserts an **11-hour overnight rest** where the
+driving day ends. Whenever possible it places the overnight stop at a charging location, so the
+truck starts the next day with a full battery at no extra time cost.
+
+This example plans Hamburg → Munich (777 km): a full driving day, an overnight stop near
+Ingolstadt, and a short final leg the next morning. The request is identical to a
+[single-day request](/planner/examples/intermediate-stops) — only the route length differs.
+
 ## Request
 
 <CodeGroup>
@@ -130,7 +140,7 @@ Console.WriteLine(result);
         "energy_kWh": 66.0,
         "charge_time_min": 11.0,
         "service_time_min": 15.0,
-        "arrival_time": 12.271,
+        "arrival_time": "2026-05-04T12:16:16Z",
         "sec_length_km": 317.091,
         "sec_duration_min": 256.258,
         "sec_energy_consumption_kWhkm": 1.204,
@@ -161,11 +171,11 @@ Console.WriteLine(result);
         "energy_kWh": 406.861,
         "charge_time_min": 708.987,
         "service_time_min": 708.987,
-        "arrival_time": 19.184,
+        "arrival_time": "2026-05-04T19:11:02Z",
         "sec_length_km": 199.797,
         "sec_duration_min": 149.719,
         "sec_energy_consumption_kWhkm": 1.198,
-        "start_soc": 19.184,
+        "start_soc": 0.184,
         "stop_soc": 0.90,
         "additional_stops": true,
         "alternatives": [
@@ -209,6 +219,18 @@ Console.WriteLine(result);
 }
 ```
 
+## What the optimizer did
+
+Day 1 covers ~690 km with short charging stops placed where charging is fastest (low SoC, high
+power). The driving day ends near Ingolstadt at an EnBW charging location: the truck arrives at
+18% battery in the evening, rests overnight, and leaves at 90% the next morning. The final
+85 km to Munich are driven on day 2, arriving at 08:10 with 72% battery.
+
+You can recognize the overnight stop by its duration: `charge_time_min` and `service_time_min`
+cover the **full ~11-hour overnight stay**, not only the effective plugged-in charging time
+(see [Limitations](/planner/limitations)). A dedicated overnight-stop field is planned.
+
 <Note>
-Section 5 is an overnight stop. A dedicated field for overnight stops is planned — currently indicated by an elevated `charge_time_min`.
+Time windows (`opening_time`) are not considered on multi-day tours — see
+[Time Windows](/planner/examples/time-windows).
 </Note>

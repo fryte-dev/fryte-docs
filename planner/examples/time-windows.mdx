@@ -3,6 +3,16 @@ title: Time Windows
 description: Munich to Augsburg to Ulm, 2 drops with opening times.
 ---
 
+When deliveries have opening hours, add an `opening_time` window (`[from, to]`) to each section:
+the window applies to the arrival at that section's destination. The optimizer then plans
+departure time and charging together so every window is met — it can shift the tour start later
+(`optimal_departure_time` in the response) and place charging where waiting would otherwise
+occur, so time spent standing is used for charging.
+
+This example delivers from Munich to Augsburg (09:00–12:00 window) and on to Ulm (13:00–17:00
+window). `start_time_tour` is the earliest the truck *can* leave; the response tells you when it
+*should* leave.
+
 ## Request
 
 <CodeGroup>
@@ -172,7 +182,7 @@ Console.WriteLine(result);
         "energy_kWh": 18.0,
         "charge_time_min": 4.0,
         "service_time_min": 7.0,
-        "arrival_time": 9.555,
+        "arrival_time": "2026-05-04T09:33:18Z",
         "sec_length_km": 31.223,
         "sec_duration_min": 53.318,
         "sec_energy_consumption_kWhkm": 0.983,
@@ -222,6 +232,20 @@ Console.WriteLine(result);
 }
 ```
 
+## What the optimizer did
+
+Two response fields carry the time-window result:
+
+- `optimal_departure_time`: the truck should leave at **08:40**, not at the earliest possible
+  06:00 — leaving earlier would only mean waiting in front of a closed gate in Augsburg.
+- `time_windows_reachable`: `"True"` — both windows are met (Augsburg within 09:00–12:00, Ulm
+  within 13:00–17:00). If a plan cannot meet every window, the best feasible plan is returned
+  and this field is `"False"`.
+
+The first stop is a short 4-minute top-up: with tight windows the optimizer charges in small
+increments where they cost the least time. If such short sessions are operationally undesirable,
+set a floor with [`min_charge_duration_min`](/planner/examples/minimum-charge-duration).
+
 <Note>
-The optimizer calculated a departure at 08:40 to hit both time windows — Augsburg within 09:00–12:00 and Ulm within 13:00–17:00.
+Time windows are not considered on [multi-day tours](/planner/examples/multiday-tour).
 </Note>
