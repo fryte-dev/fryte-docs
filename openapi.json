@@ -177,6 +177,18 @@
               }
             }
           },
+          "400": {
+            "description": "Invalid start_time_tour or missing tenant context."
+          },
+          "401": {
+            "description": "Missing or invalid authentication."
+          },
+          "429": {
+            "description": "Rate limit exceeded."
+          },
+          "502": {
+            "description": "Tour creation or optimizer submission failed."
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -248,6 +260,18 @@
               }
             }
           },
+          "401": {
+            "description": "Missing or invalid authentication."
+          },
+          "404": {
+            "description": "Job not found."
+          },
+          "429": {
+            "description": "Rate limit exceeded."
+          },
+          "502": {
+            "description": "Optimizer service unavailable or returned an invalid response."
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -267,7 +291,7 @@
           "planner"
         ],
         "summary": "List jobs",
-        "description": "List all optimization jobs for a given user. Returns job summaries with status, timestamps, and identifiers.",
+        "description": "List the authenticated user's optimization jobs. Returns job summaries with status, timestamps, and identifiers.",
         "operationId": "list_jobs_planner_jobs_get",
         "security": [
           {
@@ -281,13 +305,20 @@
           {
             "name": "user_id",
             "in": "query",
-            "required": true,
+            "required": false,
             "schema": {
-              "type": "integer",
-              "description": "User ID to list jobs for",
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Deprecated. If provided, must match the authenticated user's ID; jobs are always listed for the authenticated user.",
               "title": "User Id"
             },
-            "description": "User ID to list jobs for"
+            "description": "Deprecated. If provided, must match the authenticated user's ID; jobs are always listed for the authenticated user."
           },
           {
             "name": "tenant_id",
@@ -322,6 +353,18 @@
                 }
               }
             }
+          },
+          "401": {
+            "description": "Missing or invalid authentication."
+          },
+          "403": {
+            "description": "user_id does not match the authenticated user."
+          },
+          "429": {
+            "description": "Rate limit exceeded."
+          },
+          "502": {
+            "description": "Optimizer service unavailable or returned an invalid response."
           },
           "422": {
             "description": "Validation Error",
@@ -393,6 +436,21 @@
                 }
               }
             }
+          },
+          "401": {
+            "description": "Missing or invalid authentication."
+          },
+          "404": {
+            "description": "Optimization not found."
+          },
+          "409": {
+            "description": "Optimization result is not available yet."
+          },
+          "429": {
+            "description": "Rate limit exceeded."
+          },
+          "502": {
+            "description": "Optimizer service unavailable or returned an invalid response."
           },
           "422": {
             "description": "Validation Error",
@@ -472,21 +530,21 @@
           },
           "date_created": {
             "type": "string",
+            "format": "date-time",
             "title": "Date Created",
             "description": "Timestamp when the job was created (ISO-8601)."
           },
           "last_update": {
             "type": "string",
+            "format": "date-time",
             "title": "Last Update",
             "description": "Timestamp of the last status update (ISO-8601)."
           },
           "status": {
-            "type": "string",
-            "title": "Status",
-            "description": "Job status: queued, running, succeeded, not_drivable, failed, canceled."
+            "$ref": "#/components/schemas/OptimizationJobStatus",
+            "description": "Current job status."
           }
         },
-        "additionalProperties": true,
         "type": "object",
         "required": [
           "optimization_id",
@@ -496,6 +554,7 @@
           "status"
         ],
         "title": "JobListResponse",
+        "description": "A job summary in GET /planner/jobs, mirroring the optimizer's summary schema.",
         "example": {
           "date_created": "2026-04-30T08:00:00Z",
           "job_id": "c3f1c944-a44c-4c07-ab52-7df7ba94024a",
@@ -524,9 +583,8 @@
             "description": "Optimization identifier."
           },
           "status": {
-            "type": "string",
-            "title": "Status",
-            "description": "Job status: queued, running, succeeded, not_drivable, failed, canceled."
+            "$ref": "#/components/schemas/OptimizationJobStatus",
+            "description": "Current job status."
           },
           "tour_id": {
             "type": "integer",
@@ -546,7 +604,6 @@
             "description": "Vehicle identifier."
           }
         },
-        "additionalProperties": true,
         "type": "object",
         "required": [
           "job_id",
@@ -554,6 +611,7 @@
           "tour_id"
         ],
         "title": "JobStatusResponse",
+        "description": "Response body for GET /planner/jobs/{job_id}, mirroring the optimizer's job schema.",
         "example": {
           "job_id": "c3f1c944-a44c-4c07-ab52-7df7ba94024a",
           "optimization_id": 7658,
@@ -594,6 +652,19 @@
         "title": "NotDrivableReason",
         "description": "Reason returned when the optimizer determines a route is not drivable."
       },
+      "OptimizationJobStatus": {
+        "type": "string",
+        "enum": [
+          "queued",
+          "running",
+          "succeeded",
+          "not_drivable",
+          "failed",
+          "canceled"
+        ],
+        "title": "OptimizationJobStatus",
+        "description": "Lifecycle status of an optimization job."
+      },
       "OptimizationResultResponse": {
         "properties": {
           "optimization_id": {
@@ -607,9 +678,8 @@
             "description": "Tour identifier."
           },
           "status": {
-            "type": "string",
-            "title": "Status",
-            "description": "Job lifecycle status: succeeded or not_drivable."
+            "$ref": "#/components/schemas/OptimizationJobStatus",
+            "description": "Job lifecycle status; a result is available for succeeded or not_drivable."
           },
           "battery_level_start": {
             "type": "number",
@@ -690,7 +760,7 @@
               }
             ],
             "title": "Available Charging Stations",
-            "description": "All charging stations found within the route corridor. Only included when include_available_charging_stations is true."
+            "description": "All charging stations found within the route corridor, before the optimizer narrowed them down to the selected stops. Null for results created before this field was introduced."
           },
           "not_drivable_reason": {
             "anyOf": [
@@ -717,6 +787,7 @@
           "poi_list"
         ],
         "title": "OptimizationResultResponse",
+        "description": "Response body for GET /planner/optimizations/{optimization_id}/result.",
         "example": {
           "battery_level_end": 0.41,
           "battery_level_start": 0.8,
@@ -886,6 +957,7 @@
               "$ref": "#/components/schemas/SectionRequest"
             },
             "type": "array",
+            "minItems": 1,
             "title": "Section List",
             "description": "A list of route sections to be processed."
           },
@@ -916,12 +988,12 @@
               }
             ],
             "title": "Start Time Tour",
-            "description": "Start time of the tour in HH:MM:SS or ISO-8601 format."
+            "description": "Start time of the tour in HH:MM:SS or ISO-8601 format. A time-only value is interpreted as today's date in UTC."
           },
           "include_available_charging_stations": {
             "type": "boolean",
             "title": "Include Available Charging Stations",
-            "description": "When true, the response includes all charging stations along the corridor.",
+            "description": "Legacy POST /planner (v1) only: when true, the synchronous response includes all charging stations along the corridor. POST /planner/v2 results always include available_charging_stations.",
             "default": false
           }
         },
@@ -933,7 +1005,7 @@
           "poi_info"
         ],
         "title": "PlannerRequest",
-        "description": "Top-level request body schema for the planner.",
+        "description": "Top-level request body for POST /planner and POST /planner/v2.",
         "example": {
           "battery_level_end": 0.2,
           "battery_level_start": 0.8,
@@ -1020,13 +1092,13 @@
             "description": "Warnings about the request, if any."
           }
         },
-        "additionalProperties": true,
         "type": "object",
         "required": [
           "message",
           "tour_id"
         ],
         "title": "PlannerV2SubmitResponse",
+        "description": "Response body for POST /planner/v2.",
         "example": {
           "job_id": "c3f1c944-a44c-4c07-ab52-7df7ba94024a",
           "message": "202 - Job submitted.",
@@ -1895,11 +1967,10 @@
             "anyOf": [
               {
                 "items": {
-                  "type": "number",
-                  "maximum": 180.0,
-                  "minimum": -180.0
+                  "type": "number"
                 },
                 "type": "array",
+                "maxItems": 2,
                 "minItems": 2
               },
               {
@@ -1913,11 +1984,10 @@
             "anyOf": [
               {
                 "items": {
-                  "type": "number",
-                  "maximum": 180.0,
-                  "minimum": -180.0
+                  "type": "number"
                 },
                 "type": "array",
+                "maxItems": 2,
                 "minItems": 2
               },
               {
