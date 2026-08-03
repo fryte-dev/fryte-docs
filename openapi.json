@@ -772,6 +772,21 @@
               }
             ],
             "description": "Reason why the route is not drivable."
+          },
+          "warnings": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Warnings",
+            "description": "Advisory notes about this result that a dispatcher should check before dispatching — for example a custom search corridor, or a battery level that drops below the advisory minimum state of charge. Null when there is nothing to flag."
           }
         },
         "additionalProperties": true,
