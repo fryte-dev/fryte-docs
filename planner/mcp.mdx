@@ -1,0 +1,19 @@
+---
+title: MCP Server
+description: Connect your AI coding assistant to the FRYTE API docs.
+---
+
+The FRYTE docs [MCP](https://modelcontextprotocol.io) server lets AI coding assistants search our documentation, read endpoint references, and access the full OpenAPI spec. No authentication required.
+
+Add the server to any MCP-compatible tool. For example, in Claude Code:
+
+```bash
+claude mcp add --transport http fryte-docs https://docs.fryte.com/mcp
+```
+
+## Available tools
+
+| Tool | Description |
+| --- | --- |
+| `search_fryte_api` | Search across all documentation pages |
+| `query_docs_filesystem` | Read pages, browse the OpenAPI spec, and explore the docs structure |
