@@ -15,81 +15,23 @@
         "tags": [
           "planner"
         ],
-        "summary": "Plan Tour",
-        "description": "Plan a tour by performing routing, retrieving vehicle and POI data, running a simulation, and returning an assembled PlannerResponse.\n\nPerforms routing using either a provided flexpolyline or start/stop positions, augments route data with the planner request, fetches vehicle information, obtains POIs along the route (optionally via the eco-movement feature), invokes the simulation service, and returns the final PlannerResponse.\n\nReturns:\n    PlannerResponse: Response containing vehicle_id, battery_level_start, battery_level_end, sections, poi_list, optimal_departure_time, time_windows_reachable, and other planner metadata.\n\nRaises:\n    HTTPException: If the request is invalid or if any downstream service call (routing, vehicle info, POI retrieval, or simulation) fails.",
-        "operationId": "plan_tour_planner_post",
-        "security": [
-          {
-            "HybridAuthBearer": []
-          },
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "corridor",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "maximum": 20000,
-              "minimum": 1000,
-              "default": 8000,
-              "title": "Corridor"
-            }
-          },
-          {
-            "name": "tenant_id",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "integer"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Tenant ID",
-              "title": "Tenant Id"
-            },
-            "description": "Tenant ID"
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/PlannerRequest"
-              }
-            }
-          }
-        },
+        "summary": "Retired — use POST /planner/v2",
+        "description": "Reject calls to the retired synchronous planner with HTTP 410.",
+        "operationId": "plan_tour_retired_planner_post",
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PlannerResponse"
-                }
+                "schema": {}
               }
             }
           },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
+          "410": {
+            "description": "This endpoint has been retired in favor of POST /planner/v2."
           }
-        }
+        },
+        "deprecated": true
       }
     },
     "/planner/v2": {
@@ -161,7 +103,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/PlannerRequest"
+                "$ref": "#/components/schemas/PlannerV2Request"
               }
             }
           }
@@ -178,7 +120,7 @@
             }
           },
           "400": {
-            "description": "Invalid start_time_tour or missing tenant context."
+            "description": "Missing tenant context."
           },
           "401": {
             "description": "Missing or invalid authentication."
@@ -187,7 +129,7 @@
             "description": "Rate limit exceeded."
           },
           "502": {
-            "description": "Tour creation or optimizer submission failed."
+            "description": "Tour creation or job enqueue failed."
           },
           "422": {
             "description": "Validation Error",
@@ -268,9 +210,6 @@
           },
           "429": {
             "description": "Rate limit exceeded."
-          },
-          "502": {
-            "description": "Optimizer service unavailable or returned an invalid response."
           },
           "422": {
             "description": "Validation Error",
@@ -363,9 +302,6 @@
           "429": {
             "description": "Rate limit exceeded."
           },
-          "502": {
-            "description": "Optimizer service unavailable or returned an invalid response."
-          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -448,9 +384,6 @@
           },
           "429": {
             "description": "Rate limit exceeded."
-          },
-          "502": {
-            "description": "Optimizer service unavailable or returned an invalid response."
           },
           "422": {
             "description": "Validation Error",
@@ -938,7 +871,7 @@
         "type": "object",
         "title": "POIInfo"
       },
-      "PlannerRequest": {
+      "PlannerV2Request": {
         "properties": {
           "vehicle_id": {
             "type": "string",
@@ -996,20 +929,15 @@
           "start_time_tour": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "format": "date-time"
               },
               {
                 "type": "null"
               }
             ],
             "title": "Start Time Tour",
-            "description": "Start time of the tour in HH:MM:SS or ISO-8601 format. A time-only value is interpreted as today's date in UTC."
-          },
-          "include_available_charging_stations": {
-            "type": "boolean",
-            "title": "Include Available Charging Stations",
-            "description": "Legacy POST /planner (v1) only: when true, the synchronous response includes all charging stations along the corridor. POST /planner/v2 results always include available_charging_stations.",
-            "default": false
+            "description": "Start time of the tour in HH:MM:SS or ISO-8601 format. A time-only value is interpreted as today's date in UTC; a datetime without an offset is interpreted as UTC."
           }
         },
         "type": "object",
@@ -1019,8 +947,8 @@
           "section_list",
           "poi_info"
         ],
-        "title": "PlannerRequest",
-        "description": "Top-level request body for POST /planner and POST /planner/v2.",
+        "title": "PlannerV2Request",
+        "description": "POST /planner/v2 request body; parses start_time_tour into an aware\nUTC datetime.",
         "example": {
           "battery_level_end": 0.2,
           "battery_level_start": 0.8,
@@ -1050,10 +978,6 @@
           "start_time_tour": "08:00:00",
           "vehicle_id": "010160700001"
         }
-      },
-      "PlannerResponse": {
-        "additionalProperties": true,
-        "type": "object"
       },
       "PlannerV2SubmitResponse": {
         "properties": {
