@@ -11,6 +11,7 @@ export const VehicleFinder = () => {
   const [oems, setOems] = React.useState({})
   const [models, setModels] = React.useState({})
   const [capacities, setCapacities] = React.useState([])
+  const [modelVehicles, setModelVehicles] = React.useState([])
   const [vehicles, setVehicles] = React.useState([])
   const [selectedOem, setSelectedOem] = React.useState('')
   const [selectedModel, setSelectedModel] = React.useState('')
@@ -39,7 +40,7 @@ export const VehicleFinder = () => {
 
   const selectOem = (name) => {
     setSelectedOem(name)
-    setSelectedModel(''); setSelectedCapacity(''); setCapacities([]); setVehicles([])
+    setSelectedModel(''); setSelectedCapacity(''); setCapacities([]); setModelVehicles([]); setVehicles([])
     setVehicleId(''); setVehicleDetails(null); setModels({})
     if (!name) return
     fetch(`${API_BASE}/vehicles/info/models?manufacturer=${encodeURIComponent(name)}`, { headers: authHeaders })
@@ -53,42 +54,34 @@ export const VehicleFinder = () => {
 
   const selectModel = (modelName) => {
     setSelectedModel(modelName)
-    setSelectedCapacity(''); setCapacities([]); setVehicles([])
-    setVehicleId(''); setVehicleDetails(null)
+    setSelectedCapacity(''); setCapacities([]); setModelVehicles([]); setVehicles([])
+    setVehicleId(''); setVehicleDetails(null); setError('')
     if (!modelName) return
     const oemCode = oems[selectedOem]
     const modelCode = Object.entries(models).find(([k, v]) => v === modelName)?.[0]
     if (!oemCode || !modelCode) return
-    fetch(`${API_BASE}/vehicles/info/battery_capacities?search=${oemCode}${modelCode}`, { headers: authHeaders })
+    setLoading(true)
+    fetch(`${API_BASE}/vehicles/info/vehicle_id?vehicle_id=${oemCode}${modelCode}`, { headers: authHeaders })
       .then(r => r.json())
       .then(data => {
-        const mfr = data[oemCode] || {}
-        const mdl = (mfr.models || {})[modelCode] || {}
-        const caps = mdl.capacities || []
+        const list = Array.isArray(data) ? data : []
+        setModelVehicles(list)
+        const caps = [...new Set(list.map(v => v.battery_capacity))]
         setCapacities(caps.sort((a, b) => a - b))
+        if (list.length === 0) setError('No vehicles found')
       })
       .catch(() => setError('Failed to load battery capacities'))
+      .finally(() => setLoading(false))
   }
 
   const selectCapacity = (cap) => {
     setSelectedCapacity(cap)
-    setVehicles([]); setVehicleId(''); setVehicleDetails(null); setError('')
-    if (!cap) return
-    const oemCode = oems[selectedOem]
-    const modelCode = Object.entries(models).find(([k, v]) => v === selectedModel)?.[0]
-    const batteryCode = String(Math.floor(Number(cap) / 10)).padStart(2, '0')
-    const prefix = `${oemCode}${modelCode}${batteryCode}`
-    setLoading(true)
-    fetch(`${API_BASE}/vehicles/info/vehicle_id?vehicle_id=${prefix}`, { headers: authHeaders })
-      .then(r => r.json())
-      .then(data => {
-        const list = Array.isArray(data) ? data : []
-        setVehicles(list)
-        if (list.length === 1) { setVehicleId(list[0].vehicle_id); setVehicleDetails(list[0]) }
-        if (list.length === 0) setError('No vehicles found')
-      })
-      .catch(() => setError('Failed to load vehicles'))
-      .finally(() => setLoading(false))
+    setVehicleId(''); setVehicleDetails(null); setError('')
+    if (!cap) { setVehicles([]); return }
+    const list = modelVehicles.filter(v => v.battery_capacity === Number(cap))
+    setVehicles(list)
+    if (list.length === 1) { setVehicleId(list[0].vehicle_id); setVehicleDetails(list[0]) }
+    if (list.length === 0) setError('No vehicles found')
   }
 
   const selectVehicle = (v) => {
@@ -104,7 +97,7 @@ export const VehicleFinder = () => {
 
   const reset = () => {
     setSelectedOem(''); setSelectedModel(''); setSelectedCapacity('')
-    setCapacities([]); setVehicles([])
+    setCapacities([]); setModelVehicles([]); setVehicles([])
     setVehicleId(''); setVehicleDetails(null); setError('')
   }
 
