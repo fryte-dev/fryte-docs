@@ -10,30 +10,6 @@
     }
   ],
   "paths": {
-    "/planner": {
-      "post": {
-        "tags": [
-          "planner"
-        ],
-        "summary": "Retired — use POST /planner/v2",
-        "description": "Reject calls to the retired synchronous planner with HTTP 410.",
-        "operationId": "plan_tour_retired_planner_post",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "410": {
-            "description": "This endpoint has been retired in favor of POST /planner/v2."
-          }
-        },
-        "deprecated": true
-      }
-    },
     "/planner/v2": {
       "post": {
         "tags": [
@@ -553,6 +529,15 @@
           "vehicle_id": "010160700001"
         }
       },
+      "NetworkType": {
+        "type": "string",
+        "enum": [
+          "MATCHED",
+          "NON_MATCHED"
+        ],
+        "title": "NetworkType",
+        "description": "Whether a location's operator is matched with the requesting tenant."
+      },
       "NotDrivableReason": {
         "properties": {
           "code": {
@@ -818,6 +803,34 @@
             "title": "Cpo",
             "description": "A list of Charge Point Operators (CPO) to filter by."
           },
+          "cpo_name_like": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cpo Name Like",
+            "description": "Only consider operators whose name matches. Without `*` this is an exact, case-insensitive match; `*` stands for any characters (e.g. `*ionity*`)."
+          },
+          "cpo_name_not_like": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cpo Name Not Like",
+            "description": "Skip operators whose name matches. Same matching rules as `cpo_name_like`; applied after all other operator filters."
+          },
           "truck_approved": {
             "anyOf": [
               {
@@ -866,6 +879,17 @@
             ],
             "title": "Bookable",
             "description": "Only return bookable charging stations."
+          },
+          "network_type": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/NetworkType"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "MATCHED: only stations of matched partners and your own stations. NON_MATCHED: exclude them."
           }
         },
         "type": "object",
@@ -958,6 +982,7 @@
               "CCS"
             ],
             "min_kW": 150,
+            "network_type": "MATCHED",
             "truck_approved": "T"
           },
           "section_list": [
