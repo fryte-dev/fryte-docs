@@ -21,7 +21,8 @@
               "planner/quickstart",
               "planner/vehicles",
               "planner/errors",
-              "planner/limitations"
+              "planner/limitations",
+              "planner/mcp"
             ]
           },
           {
