@@ -67,10 +67,11 @@ export const ConnectorSetup = () => {
   )
 }
 
-Connect Claude to FRYTE and plan routes in plain language: *"Plan Stuttgart → Berlin tomorrow at
-6:00 with a MAN eTGX, 80% battery, 19 t payload."* Claude finds the vehicle, shows you the request to
-confirm, runs the optimization and explains where and how long to charge. It also answers questions
-about e-truck operations and the FRYTE platform.
+Connect Claude to FRYTE and ask in plain language: *"We run Hamburg → Munich and Stuttgart → Berlin
+every weekday. Can we do that with electric trucks, and with which one?"* Claude checks every tour
+with several trucks on the FRYTE optimizer and tells you within seconds what works, with how much
+charging, and whether it's worth a closer look. It can also plan a single route in detail and
+answer questions about e-truck operations and the FRYTE platform.
 
 ## 1. Get an API key
 
@@ -88,6 +89,8 @@ The connector uses your FRYTE API key, the same one you use for the API. Contact
 
 ## 3. Ask away
 
+- *"Can we run Cologne → Dresden with 20 t electric? Which truck works best?"*
+- *"From which battery level at departure does that work? And fully loaded?"*
 - *"Which charging stops does a Daimler eActros 600 need from Hamburg to Munich, leaving at 80%?"*
 - *"Only use IONITY and Milence, at least 300 kW, and I need to arrive with 30%."*
 - *"Is my route drivable with 25 t payload? If not, what should I change?"*
@@ -99,6 +102,8 @@ Claude confirms the route parameters with you before it submits an optimization.
 
 | Capability         | Details                                                                    |
 | ------------------ | -------------------------------------------------------------------------- |
+| Feasibility check  | Which tours can run electric, with which trucks, and with how much charging |
+| Scenarios          | Battery at departure, payload, charger power, departure time                |
 | Route optimization | Charging stops, durations, battery levels, time windows, multi-stop tours |
 | Vehicle lookup     | Finds your truck's Vehicle ID step by step                                 |
 | Charging stations  | Truck-ready stations along a route, operators, charging curves             |
