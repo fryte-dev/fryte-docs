@@ -1,0 +1,115 @@
+---
+title: Use FRYTE in Claude
+description: Plan e-truck routes and ask anything about FRYTE, right in Claude.
+icon: "message-bot"
+---
+
+{/* FRYTE MCP server (github.com/fryte-dev/fryte-mcp). Update when the hosted URL changes. */}
+export const MCP_URL = 'https://mcp.fryte.com'
+
+export const ConnectorSetup = () => {
+  const [key, setKey] = React.useState('')
+  const [copied, setCopied] = React.useState('')
+
+  const shown = key.trim() || '<your-api-key>'
+  const snippets = [
+    {
+      id: 'web',
+      title: 'Claude (web, desktop, mobile)',
+      hint: 'Settings → Connectors → Add custom connector → paste as the URL. Treat it like a password.',
+      text: `${MCP_URL}/k/${shown}/mcp`,
+    },
+    {
+      id: 'code',
+      title: 'Claude Code',
+      hint: 'Run in your terminal.',
+      text: `claude mcp add --transport http fryte ${MCP_URL}/mcp --header "Authorization: Bearer ${shown}"`,
+    },
+  ]
+
+  const copy = (snippet) => {
+    navigator.clipboard.writeText(snippet.text)
+    setCopied(snippet.id)
+    setTimeout(() => setCopied(''), 2000)
+  }
+
+  const s = {
+    wrap: { display: 'flex', flexDirection: 'column', gap: '20px', padding: '24px', borderRadius: '12px', border: '1px solid rgba(128,128,128,0.25)', margin: '24px 0' },
+    label: { display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '6px', color: 'inherit', opacity: 0.7, textTransform: 'uppercase', letterSpacing: '0.5px' },
+    input: { width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid rgba(128,128,128,0.3)', fontSize: '14px', backgroundColor: 'transparent', color: 'inherit', outline: 'none', boxSizing: 'border-box' },
+    note: { fontSize: '12px', opacity: 0.6, marginTop: '6px' },
+    code: { display: 'block', padding: '12px 14px', borderRadius: '8px', backgroundColor: 'rgba(128,128,128,0.08)', border: '1px solid rgba(128,128,128,0.25)', fontSize: '13px', wordBreak: 'break-all', whiteSpace: 'pre-wrap' },
+    row: { display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '12px', marginBottom: '6px' },
+    btnOutline: (on) => ({ padding: '6px 14px', borderRadius: '6px', border: '1px solid rgba(128,128,128,0.3)', backgroundColor: 'transparent', fontSize: '13px', cursor: on ? 'pointer' : 'default', color: 'inherit', whiteSpace: 'nowrap', opacity: on ? 1 : 0.5 }),
+  }
+
+  return (
+    <div style={s.wrap}>
+      <div>
+        <label style={s.label}>API Key</label>
+        <input type="password" value={key} onChange={e => setKey(e.target.value)}
+          placeholder="Paste your FRYTE API key" autoComplete="off" style={s.input} />
+        <div style={s.note}>Your key stays in this browser tab; it is only filled into the snippets below.</div>
+      </div>
+      {snippets.map(snippet => (
+        <div key={snippet.id}>
+          <div style={s.row}>
+            <span style={{ fontWeight: 600, fontSize: '14px' }}>{snippet.title}</span>
+            <button onClick={() => copy(snippet)} disabled={!key.trim()} style={s.btnOutline(!!key.trim())}>
+              {copied === snippet.id ? 'Copied' : 'Copy'}
+            </button>
+          </div>
+          <code style={s.code}>{snippet.text}</code>
+          <div style={s.note}>{snippet.hint}</div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+Connect Claude to FRYTE and plan routes in plain language: *"Plan Stuttgart → Berlin tomorrow at
+6:00 with a MAN eTGX, 80% battery, 19 t payload."* Claude finds the vehicle, shows you the request to
+confirm, runs the optimization and explains where and how long to charge. It also answers questions
+about e-truck operations and the FRYTE platform.
+
+## 1. Get an API key
+
+The connector uses your FRYTE API key, the same one you use for the API. Contact
+[team@fryte.eu](mailto:team@fryte.eu) to obtain one.
+
+## 2. Add FRYTE to Claude
+
+<ConnectorSetup />
+
+<Info>
+  Custom connectors are available on Claude's paid plans. On Team and Enterprise plans, an owner may
+  need to allow custom connectors first.
+</Info>
+
+## 3. Ask away
+
+- *"Which charging stops does a Daimler eActros 600 need from Hamburg to Munich, leaving at 80%?"*
+- *"Only use IONITY and Milence, at least 300 kW, and I need to arrive with 30%."*
+- *"Is my route drivable with 25 t payload? If not, what should I change?"*
+- *"What does an e-truck cost compared to diesel at 90,000 km a year?"*
+
+Claude confirms the route parameters with you before it submits an optimization.
+
+## What Claude can do
+
+| Capability         | Details                                                                    |
+| ------------------ | -------------------------------------------------------------------------- |
+| Route optimization | Charging stops, durations, battery levels, time windows, multi-stop tours |
+| Vehicle lookup     | Finds your truck's Vehicle ID step by step                                 |
+| Charging stations  | Truck-ready stations along a route, operators, charging curves             |
+| FRYTE knowledge    | Products, matchmaking, e-truck economics from our whitepaper               |
+| API docs           | Searches this documentation                                                |
+
+## Docs only, no API key
+
+To give an AI coding assistant access to this documentation only, add the docs MCP server. It needs
+no authentication.
+
+```bash
+claude mcp add --transport http fryte-docs https://docs.fryte.com/mcp
+```

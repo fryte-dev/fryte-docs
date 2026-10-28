@@ -19,6 +19,7 @@
             "pages": [
               "index",
               "planner/quickstart",
+              "ai-tools/claude",
               "planner/vehicles",
               "planner/errors",
               "planner/limitations"
