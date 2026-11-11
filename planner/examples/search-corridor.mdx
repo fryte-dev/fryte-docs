@@ -178,3 +178,27 @@ returns `not_drivable` or very few candidates, the region may lack verified truc
 widen the corridor, try `"T"` instead of `"TT"`, or contact FRYTE about coverage — do not drop
 the filter for a truck.
 </Warning>
+
+## Filter by operator
+
+`poi_info.cpo` limits the candidates to the listed charge point operators. Every operator not on
+the list is dropped.
+
+```json
+"poi_info": {
+  "min_kW": 150,
+  "truck_approved": "T",
+  "cpo": ["Fastned", "Milence", "IONITY"]
+}
+```
+
+Names match case-insensitively, and leading and trailing whitespace is ignored: `"GoFast"`,
+`"GOFAST"` and `" gofast "` select the same operator. Operators you exclude in your account
+settings follow the same rule.
+
+<Tip>
+A name that matches no operator selects nothing, and the response has no warning. Check that
+your list covers every country on the route. A list that misses regional operators can leave
+long stretches without a candidate and make the tour `not_drivable`. For pattern matching, use
+`cpo_name_like` or `cpo_name_not_like` instead.
+</Tip>
