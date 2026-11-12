@@ -1,0 +1,62 @@
+---
+title: Planner settings
+description: Tune corridor, charging, driving-time and speed behavior with the planner_settings request body object.
+---
+
+`POST /planner/v2` accepts an optional `planner_settings` object in the request body. Every field is optional: omit the object, or send only the fields you want to change, and FRYTE fills in the defaults.
+
+<Warning>
+**Breaking change.** The query parameters `?corridor=` and `?min_charge_duration_min=` were removed. Sending either one now returns `422`. Move them into the body as `planner_settings.corridor_m` and `planner_settings.min_charge_duration_min`.
+</Warning>
+
+## Fields
+
+| Field | Type | Default | Bounds | What it does |
+|---|---|---|---|---|
+| `corridor_m` | integer | `8000` | 1000–20000 | Search distance in meters around the route for charging stations. See [Search Corridor](/planner/examples/search-corridor). |
+| `min_charge_duration_min` | integer | `0` | 0–100 | Minimum length of a charging session in minutes. See [Minimum Charging Duration](/planner/examples/minimum-charge-duration). |
+| `max_driving_time_stint_min` | number | `270` | above 0, up to 270 | Driving time in minutes before the mandatory 45-minute break. |
+| `use_loading_time_as_rest_time` | boolean | `false` | | If `true`, the stop time at intermediate stops counts toward that break. |
+| `max_driving_speed_kmh` | number | `89` | above 0, up to 130 | Speed cap for the truck on every road segment. |
+
+The speed cap is a single value. There is no per-road-type speed.
+
+## Example
+
+```bash curl
+curl -X POST "https://api.fryte.com/planner/v2" \
+  -H "Authorization: Bearer <your-token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "vehicle_id": "010160700001",
+    "battery_level_start": 0.8,
+    "section_list": [
+      {
+        "start_pos": [52.3700, 4.9000],
+        "stop_pos": [53.0800, 8.8100],
+        "payload_kg": 19300
+      }
+    ],
+    "planner_settings": {
+      "corridor_m": 5000,
+      "min_charge_duration_min": 10,
+      "max_driving_time_stint_min": 240,
+      "use_loading_time_as_rest_time": true,
+      "max_driving_speed_kmh": 80
+    }
+  }'
+```
+
+The `202` response and the optimization result both echo the `planner_settings` that were applied, including the defaults for fields you did not send.
+
+## Related changes
+
+- `poi_info` is now optional. Without it, no station filter is applied. For truck routing, [still set `poi_info.truck_approved`](/planner/examples/search-corridor#always-set-the-truck-ready-filter).
+- `service_time_departure_min` is now applied to the plan.
+
+## Migrating
+
+| Before | Now |
+|---|---|
+| `POST /planner/v2?corridor=8000` | `"planner_settings": {"corridor_m": 8000}` in the body |
+| `POST /planner/v2?min_charge_duration_min=10` | `"planner_settings": {"min_charge_duration_min": 10}` in the body |
